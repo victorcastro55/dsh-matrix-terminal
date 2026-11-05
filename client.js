@@ -794,7 +794,9 @@ body[data-ds-dark-theme] {
       const [, bump] = React.useState(0);
       React.useEffect(() => ctx.locale.subscribe(() => bump((n) => n + 1)), [ctx]);
       React.useEffect(() => balance.subscribe(() => bump((n) => n + 1)), [balance]);
-      const id = typeof props.sessionId === 'string' ? props.sessionId.slice(0, 8) : '';
+      // Session ids arrive as `session-<uuid>`; the prompt wants the discriminator, not the word.
+      const rawId = typeof props.sessionId === 'string' ? props.sessionId : '';
+      const id = rawId === '' ? '' : rawId.replace(/^session-/, '').slice(0, 8);
       const amount = balance.get().text;
       const label =
         amount === ''
@@ -924,26 +926,47 @@ body[data-ds-dark-theme] {
                   return undefined;
                 }
               };
+              /**
+               * Open the log tab for the mounted Session. A Session's tab store
+               * is minted a moment after the column mounts, so the first call can
+               * throw or read as unadopted; report success so the caller can retry,
+               * and remember the Session once the tab is really there.
+               * @returns true when the tab exists or was opened.
+               */
               const open = () => {
                 const column = scope.sidebarRight;
                 const sessionId = mountedOf(column);
-                if (sessionId === undefined || opened.has(sessionId)) return;
-                opened.add(sessionId);
+                if (sessionId === undefined) return false;
+                if (opened.has(sessionId)) return true;
                 try {
                   const tabs = column.tabsIn(sessionId);
-                  if (Array.isArray(tabs) && tabs.some((tab) => tab !== null && tab.kind === LOG_KIND)) return;
+                  if (Array.isArray(tabs) && tabs.some((tab) => tab !== null && tab.kind === LOG_KIND)) {
+                    opened.add(sessionId);
+                    return true;
+                  }
                   column.openTab(LOG_KIND);
+                  opened.add(sessionId);
+                  return true;
                 } catch {
-                  // The Session's store is not minted yet; the next change retries.
-                  opened.delete(sessionId);
+                  return false;
                 }
               };
               scope.effect(() => {
-                const timer = setTimeout(open, 80);
+                // Bounded retry: the store arrives within a few hundred ms, and a
+                // Session that never adopts simply leaves the log closed.
+                let timer;
+                let tries = 0;
+                const tick = () => {
+                  if (open() || (tries += 1) >= 40) return;
+                  timer = setTimeout(tick, 150);
+                };
+                timer = setTimeout(tick, 80);
                 const source = scope.sidebarRight.mounted;
                 const unsubscribe =
                   source !== undefined && typeof source.subscribe === 'function'
-                    ? source.subscribe(open)
+                    ? source.subscribe(() => {
+                        if (!open()) tick();
+                      })
                     : () => {};
                 return () => {
                   clearTimeout(timer);

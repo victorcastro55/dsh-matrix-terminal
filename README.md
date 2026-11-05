@@ -6,9 +6,14 @@ One monospace voice, square edges, scanlines over the glass, a blinking prompt l
 composer, and a chat that reads as a transcript: prompts and answers on the left, everything the
 harness did behind them moved into a right-side work log.
 
+![The skin in a session: chat on the left, thinking and work log on the right, terminal prompt under the composer](docs/overview.png)
+
 ```
 harness@matrix:~$ 3f7c1a08 █                              <$0.01
 ```
+
+(The screenshots were taken without the companion balance plugin, so the prompt line ends at the
+cursor.)
 
 ## What it changes
 
@@ -27,6 +32,8 @@ hard-coded colour on top of a token.
 **The prompt line.** A `conversation.composer.dock` slot under the composer:
 `harness@matrix:~$`, the first eight characters of the session id, a blinking block cursor, and —
 if the companion balance plugin is installed — the account balance right-aligned.
+
+![The prompt line: harness@matrix:~$, the session discriminator, and a blinking block cursor](docs/prompt-line.png)
 
 **The transcript.** Process rows the chat would otherwise print inline (tool calls, turn process,
 system prompts, context, compaction, retries, workflow runs) are hidden from the flow and projected
