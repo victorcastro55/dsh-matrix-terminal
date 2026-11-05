@@ -54,7 +54,7 @@ itself once per session; close it and it stays closed until you move to another 
 ## Install
 
 ```sh
-dsh plugin --profile web add github:victorcastro55/dsh-matrix-terminal
+dsh plugin --profile web add dsh-matrix-terminal
 ```
 
 Restart `dsh web` (or let the profile reload) and the skin is on.
@@ -62,13 +62,18 @@ Restart `dsh web` (or let the profile reload) and the skin is on.
 To also get the balance on the prompt line, install the companion:
 
 ```sh
-dsh plugin --profile web add github:victorcastro55/dsh-matrix-terminal-balance
+dsh plugin --profile web add dsh-matrix-terminal-balance
 ```
 
-Both repositories are private for now, so installs need a GitHub credential pnpm can use
-(`gh auth login` is enough).
+### From source
 
-### From a clone
+Without npm, install straight from the repository:
+
+```sh
+dsh plugin --profile web add github:victorcastro55/dsh-matrix-terminal
+```
+
+Or from a clone, if you want to edit it live:
 
 ```sh
 git clone https://github.com/victorcastro55/dsh-matrix-terminal.git
