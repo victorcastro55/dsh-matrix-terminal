@@ -1,0 +1,3 @@
+- insert:
+    - id: matrix-terminal
+      name: dsh-matrix-terminal

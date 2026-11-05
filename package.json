@@ -1,0 +1,62 @@
+{
+  "name": "dsh-matrix-terminal",
+  "version": "1.0.0",
+  "description": "Phosphor-green terminal skin for the DeepSeek Harness Web UI: monospace type, square edges, scanlines, a blinking prompt line, a right-side work log, and a chat reduced to a transcript.",
+  "type": "module",
+  "main": "index.js",
+  "icon": "./icon.svg",
+  "exports": {
+    ".": "./index.js",
+    "./client": "./client.js",
+    "./package.json": "./package.json",
+    "./locale/en.json": "./locale/en.json",
+    "./locale/zh.json": "./locale/zh.json",
+    "./icon": "./icon.svg"
+  },
+  "files": [
+    "index.js",
+    "client.js",
+    "cordis.patch.yml",
+    "locale",
+    "icon.svg",
+    "README.md",
+    "LICENSE"
+  ],
+  "keywords": [
+    "deepseek",
+    "deepseek-harness",
+    "dsh",
+    "dsh-plugin",
+    "skin",
+    "theme",
+    "terminal",
+    "matrix",
+    "web-ui"
+  ],
+  "license": "MIT",
+  "author": "Victor Castro Solalto",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/victorcastro55/dsh-matrix-terminal.git"
+  },
+  "bugs": {
+    "url": "https://github.com/victorcastro55/dsh-matrix-terminal/issues"
+  },
+  "homepage": "https://github.com/victorcastro55/dsh-matrix-terminal#readme",
+  "engines": {
+    "node": ">=18"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "immediately": true,
+      "inject": [
+        "@deepseek-ai/dsh-client-ui-theme",
+        "@deepseek-ai/dsh-client-ui-conversation"
+      ]
+    }
+  }
+}

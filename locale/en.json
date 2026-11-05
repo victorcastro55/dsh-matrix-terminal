@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Matrix Terminal",
+    "description": "Repaints the Web UI as a phosphor terminal: monospace type, square edges, scanlines, the Matrix green, and a right-side work log."
+  }
+}
