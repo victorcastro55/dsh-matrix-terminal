@@ -154,4 +154,12 @@ the runtime strings live in the module's own dictionaries.
 
 ## License
 
-MIT. Not affiliated with DeepSeek; no assets from the Harness are redistributed here.
+**AGPL-3.0-or-later.** Copyright (C) 2026 Victor Castro Solalto. The full text is in [`LICENSE`](LICENSE).
+
+This is a copyleft licence: you may use, modify and redistribute this plugin, but a version you
+distribute — including one you run as a network service — must carry the same freedoms and its source
+with it. It does not reach your content: the music you play, the sessions you run, and the files in
+your workspace are untouched by it. If you would rather not take on copyleft obligations, install one
+of the earlier MIT releases instead of this one.
+
+Not affiliated with DeepSeek; no assets from the Harness are redistributed here.
