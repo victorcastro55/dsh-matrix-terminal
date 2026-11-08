@@ -530,6 +530,122 @@ body[data-ds-dark-theme] {
   letter-spacing: 0;
   text-transform: none;
 }
+/* Pattern: an editor, a piece list, and the same bars, reading Strudel's output. */
+.mtx-pattern {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  height: 100%;
+  min-height: 0;
+  padding: 10px 12px 8px;
+  background: var(--dsw-alias-bg-base);
+  font-family: var(--dsw-font-family);
+}
+.mtx-pattern-head {
+  flex: none;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 11px;
+  line-height: 16px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--dsw-alias-label-secondary);
+}
+.mtx-pattern-state { color: var(--dsw-alias-label-dimmed); letter-spacing: 0.04em; }
+.mtx-pattern-state[data-state="playing"] { color: var(--dsw-alias-brand-primary); text-shadow: 0 0 10px var(--dsw-alias-brand-primary); }
+.mtx-pattern-state[data-state="error"] { color: var(--dsw-alias-state-error-primary); }
+.mtx-pattern-name {
+  margin-left: auto;
+  max-width: 42%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--dsw-alias-label-caption);
+}
+.mtx-pattern-canvas { flex: 0 0 auto; width: 100%; height: 84px; display: block; }
+.mtx-pattern-list {
+  flex: 0 1 auto;
+  max-height: 26%;
+  min-height: 0;
+  overflow: auto;
+  border-top: 1px solid var(--dsw-alias-border-l1);
+  border-bottom: 1px solid var(--dsw-alias-border-l1);
+}
+.mtx-pattern-row { display: flex; align-items: center; gap: 4px; }
+.mtx-pattern-item {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 2px 4px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--dsw-alias-label-secondary);
+  font-family: inherit;
+  font-size: 11px;
+  line-height: 17px;
+  text-align: left;
+  cursor: pointer;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.mtx-pattern-item:hover { background: var(--dsw-alias-interactive-bg-hover); color: var(--dsw-alias-label-primary); }
+.mtx-pattern-item[data-active] { background: var(--dsw-alias-interactive-bg-active); color: var(--dsw-alias-brand-primary); }
+.mtx-pattern-tag { margin-left: auto; color: var(--dsw-alias-label-dimmed); font-size: 10px; letter-spacing: 0.06em; }
+.mtx-pattern-x {
+  flex: none;
+  width: 20px;
+  border: 0;
+  background: transparent;
+  color: var(--dsw-alias-label-dimmed);
+  font-family: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+.mtx-pattern-x:hover { color: var(--dsw-alias-state-error-primary); }
+.mtx-pattern-code {
+  flex: 1 1 auto;
+  min-height: 90px;
+  resize: none;
+  padding: 6px 8px;
+  border: 1px solid var(--dsw-alias-border-l2);
+  border-radius: 0;
+  background: var(--dsw-alias-markdown-code-block);
+  color: var(--dsw-alias-label-primary);
+  font-family: var(--dsw-font-family);
+  font-size: 11px;
+  line-height: 16px;
+  tab-size: 2;
+}
+.mtx-pattern-code:focus { outline: 1px solid var(--dsw-alias-brand-primary); outline-offset: -1px; }
+.mtx-pattern-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 2px 6px;
+  border: 1px solid var(--dsw-alias-border-l2);
+  border-radius: 0;
+  background: transparent;
+  color: var(--dsw-alias-label-primary);
+  font-family: inherit;
+  font-size: 11px;
+  line-height: 16px;
+}
+.mtx-pattern-error {
+  flex: none;
+  max-height: 72px;
+  overflow: auto;
+  color: var(--dsw-alias-state-error-primary);
+  font-size: 11px;
+  line-height: 15px;
+  white-space: pre-wrap;
+}
+.mtx-pattern-note { flex: none; color: var(--dsw-alias-label-dimmed); font-size: 10px; line-height: 14px; }
 .mtx-sound-refresh {
   flex: none;
   padding: 0 6px;
@@ -707,6 +823,22 @@ body[data-ds-dark-theme] {
       'sound.library.missing': 'No folder at',
       'sound.library.empty': 'No audio files in this folder.',
       'sound.refresh': 'Rescan folder',
+      'pattern.title': 'Pattern',
+      'pattern.guide.description': 'Live-code music with Strudel, in the pane.',
+      'pattern.visual': 'Spectrum of the Strudel engine output',
+      'pattern.code': 'Strudel pattern',
+      'pattern.run': 'Run',
+      'pattern.stop': 'Stop',
+      'pattern.save': 'Save',
+      'pattern.saveAs': 'Save as',
+      'pattern.delete': 'Delete',
+      'pattern.builtin': 'built in',
+      'pattern.saved': 'saved',
+      'pattern.loading': 'loading engine',
+      'pattern.playing': 'playing',
+      'pattern.error': 'engine error',
+      'pattern.idle': 'idle',
+      'pattern.engine': 'Strudel 1.3.0 is fetched from esm.sh the first time you press Run; the bars are its real output.',
     };
     const zh = {
       'prompt.label': '终端提示符：harness@matrix',
@@ -740,6 +872,22 @@ body[data-ds-dark-theme] {
       'sound.library.missing': '未找到文件夹：',
       'sound.library.empty': '该文件夹中没有音频文件。',
       'sound.refresh': '重新扫描文件夹',
+      'pattern.title': '节奏',
+      'pattern.guide.description': '在侧栏里用 Strudel 现场编写音乐。',
+      'pattern.visual': 'Strudel 引擎输出的频谱',
+      'pattern.code': 'Strudel 代码',
+      'pattern.run': '运行',
+      'pattern.stop': '停止',
+      'pattern.save': '保存',
+      'pattern.saveAs': '另存为',
+      'pattern.delete': '删除',
+      'pattern.builtin': '内置',
+      'pattern.saved': '已存',
+      'pattern.loading': '正在加载引擎',
+      'pattern.playing': '播放中',
+      'pattern.error': '引擎错误',
+      'pattern.idle': '空闲',
+      'pattern.engine': '首次运行时会从 esm.sh 获取 Strudel 1.3.0；频谱来自它的真实输出。',
     };
 
     /** Right-Sidebar page type and body identity for the work log. */
@@ -753,6 +901,10 @@ body[data-ds-dark-theme] {
     /** Right-Sidebar page type and body identity for the sound pane. */
     const SOUND_ID = 'matrix-terminal-sound';
     const SOUND_KIND = 'matrix-sound';
+
+    /** Right-Sidebar page type and body identity for the pattern pane. */
+    const PATTERN_ID = 'matrix-terminal-pattern';
+    const PATTERN_KIND = 'matrix-pattern';
 
     // #region work-log helpers
     /** Trim to one line and a fixed width for a log cell. */
@@ -1784,6 +1936,423 @@ body[data-ds-dark-theme] {
       );
     }
 
+    /** Built-in patterns. Each is plain Strudel code, shown in the editor and run as written. */
+    const PATTERNS = [
+      {
+        name: 'Aurora Drift',
+        code: `setcpm(52/4)
+
+stack(
+  note("<[c3,eb3,g3] [ab2,c3,eb3] [f2,ab2,c3] [g2,bb2,d3]>")
+    .s("sawtooth")
+    .attack(2).release(4)
+    .lpf(sine.range(600, 1400).slow(16))
+    .gain(0.22)
+    .room(0.85),
+  note("<c2 ab1 f1 g1>").s("sine").attack(1.5).release(3).gain(0.32),
+  note("<c4 eb4 g4 bb4 f4 ab4 d4 g4>".fast(2))
+    .s("triangle")
+    .attack(0.01).decay(0.2).sustain(0)
+    .delay(0.35).room(0.5)
+    .gain(0.16)
+)`,
+      },
+      {
+        name: 'Cold Start',
+        code: `setcpm(96/4)
+
+stack(
+  s("bd ~ bd ~").gain(0.9),
+  s("~ ~ sd ~").gain(0.6).room(0.25),
+  s("hh*8").gain(0.28).pan(sine.range(0.3, 0.7).fast(2)),
+  note("<a2 a2 f2 g2>").s("sawtooth").lpf(520).gain(0.3),
+  note("<a4 c5 e5 g5>".fast(4)).s("triangle").attack(0.005).release(0.15).gain(0.1).delay(0.3)
+)`,
+      },
+      {
+        name: 'Euclidean',
+        code: `setcpm(72/4)
+
+stack(
+  s("bd(3,8)").gain(0.85),
+  s("hh(5,16)").gain(0.26).pan(sine.range(0.2, 0.8)),
+  note("c2 eb2 g2 bb2".euclid(5, 8)).s("sawtooth").lpf(700).gain(0.22),
+  note("c5".euclid(3, 16)).s("triangle").attack(0.005).release(0.4).room(0.6).gain(0.1)
+)`,
+      },
+    ];
+
+    /** Where a saved pattern lives; the pane owns this key and nothing else touches it. */
+    const PATTERN_STORE = 'dsh-matrix-terminal:patterns';
+    /** Versioned engine build: a pinned URL, so an upstream release cannot change this pane. */
+    const STRUDEL_URL = 'https://esm.sh/@strudel/web@1.3.0';
+
+    /** Read the patterns this reader saved, dropping anything malformed. */
+    function readSavedPatterns() {
+      try {
+        const raw = window.localStorage.getItem(PATTERN_STORE);
+        if (raw === null) return [];
+        const parsed = JSON.parse(raw);
+        if (!Array.isArray(parsed)) return [];
+        return parsed.filter((item) => item !== null && typeof item === 'object' && typeof item.name === 'string' && typeof item.code === 'string');
+      } catch {
+        return [];
+      }
+    }
+
+    /** Write the saved patterns, silently doing nothing when storage refuses. */
+    function writeSavedPatterns(list) {
+      try {
+        window.localStorage.setItem(PATTERN_STORE, JSON.stringify(list));
+      } catch {
+        // Private mode and quota failures leave the list in memory only.
+      }
+    }
+
+    /**
+     * The Strudel engine, loaded once per page and shared by every mount.
+     *
+     * Its output is diverted into an analyser by intercepting connections to a
+     * destination node: the engine builds its own AudioContext and connects to
+     * `context.destination` when it plays, so the only way to measure it without
+     * reimplementing it is to stand in front of that connection. The interception
+     * is scoped to the context that owns the destination, so the sound page's own
+     * graph is untouched.
+     */
+    const strudelEngine = {
+      module: null,
+      pending: null,
+      graphs: new Map(),
+      patched: false,
+      /** Load and initialise the engine, or return the one already running. */
+      async load() {
+        if (this.module !== null) return this.module;
+        if (this.pending !== null) return this.pending;
+        this.pending = (async () => {
+          if (!this.patched) {
+            this.patched = true;
+            const graphs = this.graphs;
+            const connect = AudioNode.prototype.connect;
+            AudioNode.prototype.connect = function patchedConnect(target, ...rest) {
+              if (target instanceof AudioDestinationNode) {
+                const context = target.context;
+                let graph = graphs.get(context);
+                if (graph === undefined) {
+                  try {
+                    const analyser = context.createAnalyser();
+                    analyser.fftSize = 1024;
+                    analyser.smoothingTimeConstant = 0.82;
+                    connect.call(analyser, target);
+                    graph = { analyser, bins: new Uint8Array(analyser.frequencyBinCount) };
+                  } catch {
+                    graph = null;
+                  }
+                  graphs.set(context, graph);
+                }
+                if (graph !== undefined && graph !== null) {
+                  connect.call(this, graph.analyser, ...rest);
+                  return target;
+                }
+              }
+              return connect.call(this, target, ...rest);
+            };
+          }
+          const module = await import(STRUDEL_URL);
+          module.initStrudel();
+          this.module = module;
+          return module;
+        })();
+        try {
+          return await this.pending;
+        } finally {
+          this.pending = null;
+        }
+      },
+      /** The first analyser the engine's output reached, if it has played anything. */
+      analyser() {
+        for (const graph of this.graphs.values()) {
+          if (graph !== undefined && graph !== null) return graph;
+        }
+        return null;
+      },
+    };
+
+    /**
+     * The pattern page: a Strudel editor, a list of pieces, and the same cava bars
+     * the sound page draws — here reading the engine's own output.
+     */
+    function PatternTab(props) {
+      const t = props.t;
+      const shell = React.useRef(null);
+      const canvas = React.useRef(null);
+      const screenRef = React.useRef(true);
+      const [status, setStatus] = React.useState('idle');
+      const [error, setError] = React.useState('');
+      const [code, setCode] = React.useState(PATTERNS[0].code);
+      const [label, setLabel] = React.useState(PATTERNS[0].name);
+      const [saved, setSaved] = React.useState(readSavedPatterns);
+      const [draftName, setDraftName] = React.useState('');
+      const [activeName, setActiveName] = React.useState(PATTERNS[0].name);
+
+      React.useEffect(() => {
+        const element = shell.current;
+        if (element === null || typeof IntersectionObserver !== 'function') return undefined;
+        const observer = new IntersectionObserver(
+          (entries) => {
+            for (const entry of entries) screenRef.current = entry.isIntersecting;
+          },
+          { threshold: 0 },
+        );
+        observer.observe(element);
+        return () => observer.disconnect();
+      }, []);
+
+      // The bars: the same picture as the sound page, from whichever analyser the
+      // engine reached. With no analyser yet it draws the floor and nothing else.
+      React.useEffect(() => {
+        const tag = canvas.current;
+        if (tag === null) return undefined;
+        const style = getComputedStyle(tag);
+        const ink = style.getPropertyValue('--dsw-alias-brand-primary').trim() || '#00ff41';
+        const inkSoft = style.getPropertyValue('--dsw-alias-state-success-primary').trim() || '#38ff8f';
+        const peaks = [];
+        let frame = 0;
+        const draw = () => {
+          frame = window.requestAnimationFrame(draw);
+          if (!screenRef.current) return;
+          const width = tag.clientWidth;
+          const height = tag.clientHeight;
+          if (width === 0 || height === 0) return;
+          const ratio = Math.min(window.devicePixelRatio || 1, 2);
+          if (tag.width !== Math.round(width * ratio) || tag.height !== Math.round(height * ratio)) {
+            tag.width = Math.round(width * ratio);
+            tag.height = Math.round(height * ratio);
+          }
+          const painter = tag.getContext('2d');
+          if (painter === null) return;
+          painter.setTransform(ratio, 0, 0, ratio, 0, 0);
+          painter.clearRect(0, 0, width, height);
+          const count = Math.max(20, Math.min(56, Math.floor(width / 14)));
+          const gap = 2;
+          const barWidth = Math.max(1, (width - gap * (count - 1)) / count);
+          const span = height - 8;
+          const graph = strudelEngine.analyser();
+          const levels = new Array(count).fill(0);
+          if (graph !== null) {
+            graph.analyser.getByteFrequencyData(graph.bins);
+            const bins = graph.bins.length;
+            for (let index = 0; index < count; index += 1) {
+              const low = Math.floor(Math.pow(bins, index / count));
+              const high = Math.max(low + 1, Math.floor(Math.pow(bins, (index + 1) / count)));
+              let top = 0;
+              for (let bin = low; bin < high && bin < bins; bin += 1) top = Math.max(top, graph.bins[bin]);
+              levels[index] = top / 255;
+            }
+          }
+          for (let index = 0; index < count; index += 1) {
+            const level = levels[index];
+            const x = index * (barWidth + gap);
+            const barHeight = Math.max(1, level * span);
+            const peak = Math.max(level, (peaks[index] ?? level) - 0.012);
+            peaks[index] = peak;
+            painter.fillStyle = ink;
+            painter.globalAlpha = 0.12;
+            painter.fillRect(x, height - 2, barWidth, 2);
+            painter.fillStyle = index % 4 === 0 ? inkSoft : ink;
+            painter.globalAlpha = 0.32 + level * 0.62;
+            painter.fillRect(x, height - barHeight, barWidth, barHeight);
+            if (peak > 0.03) {
+              painter.globalAlpha = 0.85;
+              painter.fillRect(x, height - Math.max(2, peak * span) - 2, barWidth, 1);
+            }
+          }
+          painter.globalAlpha = 0.2;
+          painter.fillStyle = ink;
+          painter.fillRect(0, height - 1, width, 1);
+          painter.globalAlpha = 1;
+        };
+        draw();
+        return () => window.cancelAnimationFrame(frame);
+      }, []);
+
+      const run = async () => {
+        setStatus('loading');
+        setError('');
+        try {
+          const module = await strudelEngine.load();
+          module.evaluate(code);
+          setStatus('playing');
+          setActiveName(label);
+        } catch (failure) {
+          setStatus('error');
+          setError(failure !== null && typeof failure === 'object' && typeof failure.message === 'string' ? failure.message : String(failure));
+        }
+      };
+
+      const stop = () => {
+        const module = strudelEngine.module;
+        try {
+          if (module !== null) module.hush();
+        } catch {
+          // A refused hush leaves the engine playing; the status still reads idle.
+        }
+        setStatus('idle');
+      };
+
+      const pick = (name, text) => {
+        setLabel(name);
+        setCode(text);
+        setActiveName(name);
+      };
+
+      const saveDraft = () => {
+        const name = draftName.trim() === '' ? label + ' (copy)' : draftName.trim();
+        const next = [...saved.filter((item) => item.name !== name), { name, code }];
+        setSaved(next);
+        writeSavedPatterns(next);
+        setLabel(name);
+        setDraftName('');
+      };
+
+      const removeSaved = (name) => {
+        const next = saved.filter((item) => item.name !== name);
+        setSaved(next);
+        writeSavedPatterns(next);
+      };
+
+      const statusText =
+        status === 'loading'
+          ? t('pattern.loading')
+          : status === 'playing'
+            ? t('pattern.playing')
+            : status === 'error'
+              ? t('pattern.error')
+              : t('pattern.idle');
+
+      return React.createElement(
+        'div',
+        { className: 'mtx-pattern', ref: shell },
+        React.createElement(
+          'div',
+          { className: 'mtx-pattern-head' },
+          React.createElement('span', null, t('pattern.title')),
+          React.createElement('span', { className: 'mtx-pattern-state', 'data-state': status }, statusText),
+          React.createElement('span', { className: 'mtx-pattern-name' }, activeName),
+        ),
+        React.createElement('canvas', { className: 'mtx-pattern-canvas', ref: canvas, role: 'img', 'aria-label': t('pattern.visual') }),
+        React.createElement(
+          'div',
+          { className: 'mtx-pattern-list', role: 'list' },
+          PATTERNS.map((item) =>
+            React.createElement(
+              'button',
+              {
+                key: 'builtin:' + item.name,
+                type: 'button',
+                role: 'listitem',
+                className: 'mtx-pattern-item',
+                'data-active': item.name === label ? 'true' : undefined,
+                onClick: () => pick(item.name, item.code),
+              },
+              item.name,
+              React.createElement('span', { className: 'mtx-pattern-tag' }, t('pattern.builtin')),
+            ),
+          ),
+          saved.map((item) =>
+            React.createElement(
+              'div',
+              { key: 'saved:' + item.name, className: 'mtx-pattern-row' },
+              React.createElement(
+                'button',
+                {
+                  type: 'button',
+                  role: 'listitem',
+                  className: 'mtx-pattern-item',
+                  'data-active': item.name === label ? 'true' : undefined,
+                  onClick: () => pick(item.name, item.code),
+                },
+                item.name,
+                React.createElement('span', { className: 'mtx-pattern-tag' }, t('pattern.saved')),
+              ),
+              React.createElement(
+                'button',
+                {
+                  type: 'button',
+                  className: 'mtx-pattern-x',
+                  title: t('pattern.delete'),
+                  'aria-label': t('pattern.delete') + ' ' + item.name,
+                  onClick: () => removeSaved(item.name),
+                },
+                '\u00d7',
+              ),
+            ),
+          ),
+        ),
+        React.createElement('textarea', {
+          className: 'mtx-pattern-code',
+          value: code,
+          spellCheck: false,
+          'aria-label': t('pattern.code'),
+          onChange: (event) => setCode(event.target.value),
+        }),
+        status === 'error' && error !== ''
+          ? React.createElement('div', { className: 'mtx-pattern-error' }, error)
+          : null,
+        React.createElement(
+          'div',
+          { className: 'mtx-pattern-row' },
+          React.createElement(
+            'button',
+            { type: 'button', className: 'mtx-sound-btn', onClick: run, disabled: status === 'loading' },
+            t('pattern.run'),
+          ),
+          React.createElement('button', { type: 'button', className: 'mtx-sound-btn', onClick: stop }, t('pattern.stop')),
+          React.createElement('input', {
+            className: 'mtx-pattern-input',
+            type: 'text',
+            value: draftName,
+            placeholder: t('pattern.saveAs'),
+            'aria-label': t('pattern.saveAs'),
+            onChange: (event) => setDraftName(event.target.value),
+          }),
+          React.createElement('button', { type: 'button', className: 'mtx-sound-btn', onClick: saveDraft }, t('pattern.save')),
+        ),
+        React.createElement('div', { className: 'mtx-pattern-note' }, t('pattern.engine')),
+      );
+    }
+
+    /** The pattern chip's own copy, re-read on every locale change. */
+    function PatternTabTitle(props) {
+      return React.createElement('span', null, props.t('pattern.title'));
+    }
+
+    /**
+     * The pattern page's Start-card glyph: a five-step staircase, on `currentColor`.
+     * @param props - rendered size and class.
+     * @returns the step glyph.
+     */
+    function PatternGlyph(props) {
+      const size = props !== null && typeof props === 'object' && typeof props.size === 'number' ? props.size : 16;
+      return React.createElement(
+        'svg',
+        {
+          viewBox: '0 0 16 16',
+          width: size,
+          height: size,
+          fill: 'none',
+          className: props === null || typeof props !== 'object' ? undefined : props.className,
+          'aria-hidden': 'true',
+        },
+        React.createElement('path', {
+          d: 'M2 12h2V9h2V6h2V3h2v9h2',
+          stroke: 'currentColor',
+          strokeWidth: 1.5,
+          strokeLinecap: 'square',
+          strokeLinejoin: 'miter',
+        }),
+      );
+    }
+
     /**
      * Balance route served by the companion Host row
      * (`dsh-matrix-terminal-balance`); absent routes simply read as no balance.
@@ -1985,6 +2554,15 @@ body[data-ds-dark-theme] {
                   card: { id: 'sound', order: 42, descriptionKey: 'sound.guide.description', icon: SoundGlyph },
                   body: SoundTab,
                   chip: SoundTabTitle,
+                },
+                {
+                  id: PATTERN_ID,
+                  kind: PATTERN_KIND,
+                  label: 'pattern',
+                  titleKey: 'pattern.title',
+                  card: { id: 'pattern', order: 43, descriptionKey: 'pattern.guide.description', icon: PatternGlyph },
+                  body: PatternTab,
+                  chip: PatternTabTitle,
                 },
               ];
               for (const pane of panes) {
