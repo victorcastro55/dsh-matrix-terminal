@@ -426,6 +426,8 @@ body[data-ds-dark-theme] {
 .mtx-pulse-svg .mtx-pulse-nodes circle {
   fill: var(--mtx-pulse-ink);
   fill-opacity: 0.28;
+  transform-box: fill-box;
+  transform-origin: center;
 }
 .mtx-pulse-field[data-animate] .mtx-pulse-svg .mtx-pulse-nodes circle {
   /* Every node drifts on its own clock: orbiting is what makes the field read as
@@ -479,17 +481,17 @@ body[data-ds-dark-theme] {
 }
 /* Three drift paths, in user units of the 200x120 field box. */
 @keyframes mtx-drift-a {
-  0%, 100% { transform: translate(0, 0); }
-  50% { transform: translate(1.6px, -1.9px); }
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(3.6px, -4.4px) scale(1.14); }
 }
 @keyframes mtx-drift-b {
-  0%, 100% { transform: translate(0, 0); }
-  50% { transform: translate(-1.8px, 1.4px); }
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(-4.2px, 3.2px) scale(0.86); }
 }
 @keyframes mtx-drift-c {
-  0%, 100% { transform: translate(0, 0); }
-  33% { transform: translate(1.3px, 1.6px); }
-  66% { transform: translate(-1.5px, -1.1px); }
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(2.9px, 3.6px) scale(1.1); }
+  66% { transform: translate(-3.4px, -2.5px) scale(0.9); }
 }
 @keyframes mtx-halo {
   0% { stroke-opacity: 0.42; transform: scale(0.55); }
@@ -949,7 +951,7 @@ body[data-ds-dark-theme] {
             // Three drift paths on three clocks, desynchronised by a negative delay
             // so no two neighbours ever move together.
             drift: ['mtx-drift-a', 'mtx-drift-b', 'mtx-drift-c'][seat % 3],
-            driftDuration: 13 + (seat % 4) * 4 + 's',
+            driftDuration: 7 + (seat % 4) * 2.5 + 's',
             driftDelay: '-' + ((seat * 1.7) % 11).toFixed(1) + 's',
           });
         }
