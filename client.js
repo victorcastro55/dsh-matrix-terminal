@@ -1997,6 +1997,24 @@ stack(
 )`,
       },
       {
+        name: 'Hyperdrive',
+        code: `setcpm(140/4)
+
+stack(
+  s("bd*4").gain(0.95),
+  s("~ cp ~ cp").gain(0.55).room(0.2),
+  s("hh*16").gain("1 0.3 0.6 0.3"),
+  note("<c2 c2 c2 c2>").struct("~ x ~ x").s("sawtooth").lpf(420).gain(0.4),
+  note("<c1 c1 ab1 g1>").s("sine").gain(0.22),
+  note("<[c4,eb4,g4] [bb3,d4,f4] [ab3,c4,eb4] [g3,bb3,d4]>")
+    .struct("x ~ ~ x ~ x ~ ~")
+    .s("sawtooth").lpf(2400).attack(0.01).release(0.1).gain(0.16),
+  note("<c5 eb5 g5 bb5 ab5 g5 eb5 c5>".fast(2))
+    .s("square").lpf(3000).decay(0.08).sustain(0)
+    .delay(0.22).room(0.45).gain(0.12)
+)`,
+      },
+      {
         name: 'Euclidean',
         code: `setcpm(72/4)
 
