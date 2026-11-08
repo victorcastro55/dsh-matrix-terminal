@@ -375,6 +375,105 @@ body[data-ds-dark-theme] {
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
+
+/* Pulse: two fields of neural current, one for reasoning and one for tool work.
+   Each field is idle until its own signal goes live, so the column says what is
+   happening without reading the log. */
+.mtx-pulse {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  background: var(--dsw-alias-bg-base);
+  font-family: var(--dsw-font-family);
+}
+.mtx-pulse-field {
+  flex: 1 1 50%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 10px 12px 4px;
+}
+.mtx-pulse-field[data-tone="think"] { --mtx-pulse-ink: var(--dsw-alias-state-success-primary); }
+.mtx-pulse-field[data-tone="work"] { --mtx-pulse-ink: var(--dsw-alias-state-warn-primary); }
+.mtx-pulse-field + .mtx-pulse-field { border-top: 1px solid var(--dsw-alias-border-l2); }
+.mtx-pulse-head {
+  flex: none;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 11px;
+  line-height: 16px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.mtx-pulse-label { color: var(--dsw-alias-label-secondary); }
+.mtx-pulse-state { color: var(--dsw-alias-label-dimmed); }
+.mtx-pulse-field[data-live] .mtx-pulse-state {
+  color: var(--mtx-pulse-ink);
+  text-shadow: 0 0 10px var(--mtx-pulse-ink);
+}
+.mtx-pulse-count { margin-left: auto; color: var(--dsw-alias-label-caption); letter-spacing: 0.04em; }
+.mtx-pulse-svg { flex: 1 1 auto; width: 100%; min-height: 0; overflow: visible; }
+.mtx-pulse-svg line {
+  stroke: var(--mtx-pulse-ink);
+  stroke-opacity: 0.14;
+  stroke-width: 0.5;
+  stroke-dasharray: 2 7;
+}
+.mtx-pulse-svg .mtx-pulse-nodes circle {
+  fill: var(--mtx-pulse-ink);
+  fill-opacity: 0.28;
+}
+.mtx-pulse-core { fill: var(--mtx-pulse-ink); fill-opacity: 0.35; }
+.mtx-pulse-halo {
+  fill: none;
+  stroke: var(--mtx-pulse-ink);
+  stroke-width: 0.6;
+  stroke-opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.mtx-pulse-field[data-live] .mtx-pulse-svg line {
+  stroke-opacity: 0.45;
+  animation-name: mtx-flow;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+.mtx-pulse-field[data-live] .mtx-pulse-svg .mtx-pulse-nodes circle {
+  animation: mtx-node 1.6s ease-in-out infinite;
+}
+.mtx-pulse-field[data-live] .mtx-pulse-core {
+  fill-opacity: 0.9;
+  filter: drop-shadow(0 0 5px var(--mtx-pulse-ink));
+}
+.mtx-pulse-field[data-live] .mtx-pulse-halo { animation: mtx-halo 2.2s ease-out infinite; }
+.mtx-pulse-foot {
+  flex: none;
+  color: var(--dsw-alias-label-caption);
+  font-size: 10px;
+  line-height: 14px;
+  letter-spacing: 0.06em;
+}
+@keyframes mtx-flow {
+  from { stroke-dashoffset: 0; }
+  to { stroke-dashoffset: -18; }
+}
+@keyframes mtx-node {
+  0%, 100% { fill-opacity: 0.28; }
+  50% { fill-opacity: 1; }
+}
+@keyframes mtx-halo {
+  0% { stroke-opacity: 0.42; transform: scale(0.55); }
+  100% { stroke-opacity: 0; transform: scale(1.6); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mtx-pulse-field[data-live] .mtx-pulse-svg line,
+  .mtx-pulse-field[data-live] .mtx-pulse-svg .mtx-pulse-nodes circle,
+  .mtx-pulse-field[data-live] .mtx-pulse-halo { animation: none; }
+  .mtx-pulse-field[data-live] .mtx-pulse-svg line { stroke-opacity: 0.6; }
+  .mtx-pulse-field[data-live] .mtx-pulse-svg .mtx-pulse-nodes circle { fill-opacity: 0.8; }
+}
 `;
 
     /** Dictionary namespace owned by this plugin. */
@@ -391,6 +490,15 @@ body[data-ds-dark-theme] {
       'log.title': 'Work log',
       'log.empty': 'No work yet in this session.',
       'log.label': 'Work log: tool calls and process rows for this session',
+      'pulse.title': 'Pulse',
+      'pulse.guide.description': 'Live fields for thinking and tool work.',
+      'pulse.think': 'Thinking',
+      'pulse.work': 'Working',
+      'pulse.live': 'live',
+      'pulse.idle': 'idle',
+      'pulse.steps': 'steps',
+      'pulse.events': 'events',
+      'pulse.app': 'Activity: thinking and tool work for this session',
     };
     const zh = {
       'prompt.label': '终端提示符：harness@matrix',
@@ -403,11 +511,24 @@ body[data-ds-dark-theme] {
       'log.title': '工作日志',
       'log.empty': '本次会话尚无工作记录。',
       'log.label': '工作日志：本次会话的工具调用与过程行',
+      'pulse.title': '脉冲',
+      'pulse.guide.description': '思考与工具活动的实时视图。',
+      'pulse.think': '思考',
+      'pulse.work': '工作',
+      'pulse.live': '进行中',
+      'pulse.idle': '空闲',
+      'pulse.steps': '步',
+      'pulse.events': '条',
+      'pulse.app': '活动：本次会话的思考与工具活动',
     };
 
     /** Right-Sidebar page type and body identity for the work log. */
     const LOG_ID = 'matrix-terminal-work-log';
     const LOG_KIND = 'matrix-work-log';
+
+    /** Right-Sidebar page type and body identity for the activity fields. */
+    const PULSE_ID = 'matrix-terminal-pulse';
+    const PULSE_KIND = 'matrix-pulse';
 
     // #region work-log helpers
     /** Trim to one line and a fixed width for a log cell. */
@@ -743,6 +864,234 @@ body[data-ds-dark-theme] {
     }
 
     /**
+     * The Start page's glyph for the activity fields: a core with three spokes
+     * and three fired nodes, on `currentColor`.
+     * @param props - rendered size and class.
+     * @returns the neuron glyph.
+     */
+    function PulseGlyph(props) {
+      const size = props !== null && typeof props === 'object' && typeof props.size === 'number' ? props.size : 16;
+      return React.createElement(
+        'svg',
+        {
+          viewBox: '0 0 16 16',
+          width: size,
+          height: size,
+          fill: 'none',
+          className: props === null || typeof props !== 'object' ? undefined : props.className,
+          'aria-hidden': 'true',
+        },
+        React.createElement('circle', { cx: 8, cy: 8, r: 2.2, fill: 'currentColor' }),
+        React.createElement('path', {
+          d: 'M8 2.6v2.2M8 11.2v2.2M3.2 8h2.2M10.6 8h2.2M4.9 4.9l1.5 1.5M9.6 9.6l1.5 1.5M11.1 4.9L9.6 6.4M6.4 9.6l-1.5 1.5',
+          stroke: 'currentColor',
+          strokeWidth: 1.1,
+          strokeLinecap: 'square',
+        }),
+      );
+    }
+
+    /**
+     * One field of the lattice: a static constellation whose current and nodes
+     * animate only while that signal is live. Laid out on a 120-unit box.
+     */
+    const NEURAL = (() => {
+      // The field box is wide and shallow (200x120). Rings are stretched on x so
+      // the constellation fills the column instead of sitting in a square island.
+      const CX = 100;
+      const CY = 60;
+      const STRETCH = 1.62;
+      const FLATTEN = 0.92;
+      const nodes = [];
+      for (const ring of [
+        { count: 7, radius: 26 },
+        { count: 6, radius: 40 },
+        { count: 5, radius: 54 },
+      ]) {
+        for (let index = 0; index < ring.count; index += 1) {
+          const step = (Math.PI * 2 * index) / ring.count;
+          const drift = (nodes.length % 2 === 0 ? 1 : -1) * 0.15;
+          nodes.push({
+            x: CX + Math.cos(step + drift) * ring.radius * STRETCH,
+            y: CY + Math.sin(step + drift) * ring.radius * FLATTEN,
+            r: nodes.length % 3 === 0 ? 2.4 : 1.7,
+            delay: (nodes.length * 0.11) % 1.4,
+          });
+        }
+      }
+      const edges = nodes.map((node, index) => ({
+        x1: CX,
+        y1: CY,
+        x2: node.x,
+        y2: node.y,
+        delay: (index * 0.13) % 1.2,
+        dur: 1 + (index % 4) * 0.22,
+      }));
+      for (let index = 0; index < nodes.length; index += 3) {
+        const next = nodes[(index + 1) % nodes.length];
+        edges.push({
+          x1: nodes[index].x,
+          y1: nodes[index].y,
+          x2: next.x,
+          y2: next.y,
+          delay: (index * 0.05) % 1,
+          dur: 1.7,
+        });
+      }
+      return { nodes, edges, cx: CX, cy: CY };
+    })();
+
+    /** How long a finished tool call keeps the working field lit, in ms. */
+    const WORK_TRAIL_MS = 2500;
+
+    /**
+     * Whether each signal is live right now, and how much it has produced.
+     * A tool call that settles in 40ms would otherwise never be seen, so the
+     * working field holds its light for a short trail after the last finish.
+     * @param snapshot - current Chat snapshot.
+     * @param now - wall clock at this render, so the trail can expire.
+     * @returns live flags, counts and the newest item behind each field.
+     */
+    function pulseOf(snapshot, now) {
+      const thoughts = buildThinkingRows(snapshot);
+      const rows = buildWorkRows(snapshot);
+      const lastThought = thoughts.length === 0 ? undefined : thoughts[thoughts.length - 1];
+      const lastRow = rows.length === 0 ? undefined : rows[rows.length - 1];
+      const running = rows.filter((row) => row.state === 'running' || row.state === 'queued').length;
+      // The newest item each field is working on, so the pane says what, not only that.
+      const thinkDetail =
+        lastThought === undefined
+          ? ''
+          : (lastThought.turn === undefined ? 't?' : 't' + String(lastThought.turn)) +
+            '.' +
+            (lastThought.step === undefined ? 's?' : 's' + String(lastThought.step));
+      const workDetail =
+        lastRow === undefined ? '' : clip(lastRow.tag + (lastRow.subject === '' ? '' : ' ' + lastRow.subject), 52);
+      let lastFinish;
+      for (const row of rows) {
+        if (row.state !== 'ok' && row.state !== 'error') continue;
+        if (typeof row.time !== 'number') continue;
+        if (lastFinish === undefined || row.time > lastFinish) lastFinish = row.time;
+      }
+      const workRecent = lastFinish !== undefined && now - lastFinish < WORK_TRAIL_MS;
+      return {
+        thinkLive: lastThought !== undefined && lastThought.live === true,
+        workLive: running > 0 || workRecent,
+        workRecent,
+        steps: thoughts.length,
+        events: rows.length,
+        thinkDetail,
+        workDetail,
+      };
+    }
+
+    /**
+     * One activity field: head, lattice, and a one-line count.
+     * @param props - tone, copy, live flag and foot text.
+     * @returns the field.
+     */
+    function ActivityField(props) {
+      const tone = props.tone;
+      return React.createElement(
+        'div',
+        {
+          className: 'mtx-pulse-field',
+          'data-tone': tone,
+          'data-live': props.live ? 'true' : undefined,
+          'aria-label': props.label + ': ' + (props.live ? props.liveLabel : props.idleLabel),
+        },
+        React.createElement(
+          'div',
+          { className: 'mtx-pulse-head' },
+          React.createElement('span', { className: 'mtx-pulse-label' }, props.label),
+          React.createElement('span', { className: 'mtx-pulse-state' }, props.live ? props.liveLabel : props.idleLabel),
+          React.createElement('span', { className: 'mtx-pulse-count' }, props.count),
+        ),
+        React.createElement(
+          'svg',
+          { className: 'mtx-pulse-svg', viewBox: '0 0 200 120', preserveAspectRatio: 'xMidYMid meet', 'aria-hidden': 'true' },
+          React.createElement(
+            'g',
+            null,
+            NEURAL.edges.map((edge, index) =>
+              React.createElement('line', {
+                key: 'e' + String(index),
+                x1: edge.x1,
+                y1: edge.y1,
+                x2: edge.x2,
+                y2: edge.y2,
+                style: { animationDelay: String(edge.delay) + 's', animationDuration: String(edge.dur) + 's' },
+              }),
+            ),
+          ),
+          React.createElement('circle', { className: 'mtx-pulse-halo', cx: NEURAL.cx, cy: NEURAL.cy, r: 10 }),
+          React.createElement('circle', { className: 'mtx-pulse-core', cx: NEURAL.cx, cy: NEURAL.cy, r: 4 }),
+          React.createElement(
+            'g',
+            { className: 'mtx-pulse-nodes' },
+            NEURAL.nodes.map((node, index) =>
+              React.createElement('circle', {
+                key: 'n' + String(index),
+                cx: node.x,
+                cy: node.y,
+                r: node.r,
+                style: { animationDelay: String(node.delay) + 's' },
+              }),
+            ),
+          ),
+        ),
+        React.createElement('div', { className: 'mtx-pulse-foot' }, props.detail),
+      );
+    }
+
+    /**
+     * The activity page: one live field for reasoning, one for tool work.
+     * @param props - Chat standard props and copy.
+     * @returns the two fields.
+     */
+    function PulseTab(props) {
+      const snapshot = props.useChat((value) => value);
+      const t = props.t;
+      const [, pulseRender] = React.useState(0);
+      const state = React.useMemo(() => pulseOf(snapshot, Date.now()), [snapshot]);
+      // While a finished call is still glowing, tick so the trail can expire.
+      React.useEffect(() => {
+        if (!state.workRecent) return undefined;
+        const timer = setInterval(() => pulseRender((count) => count + 1), 600);
+        return () => clearInterval(timer);
+      }, [state.workRecent]);
+      const liveLabel = t('pulse.live');
+      const idleLabel = t('pulse.idle');
+      return React.createElement(
+        'div',
+        { className: 'mtx-pulse', role: 'group', 'aria-label': t('pulse.app') },
+        React.createElement(ActivityField, {
+          tone: 'think',
+          label: t('pulse.think'),
+          live: state.thinkLive,
+          liveLabel,
+          idleLabel,
+          count: String(state.steps),
+          detail: state.thinkDetail === '' ? t('pulse.steps') + ' ' + String(state.steps) : state.thinkDetail,
+        }),
+        React.createElement(ActivityField, {
+          tone: 'work',
+          label: t('pulse.work'),
+          live: state.workLive,
+          liveLabel,
+          idleLabel,
+          count: String(state.events),
+          detail: state.workDetail === '' ? t('pulse.events') + ' ' + String(state.events) : state.workDetail,
+        }),
+      );
+    }
+
+    /** The pulse chip's own copy, re-read on every locale change. */
+    function PulseTabTitle(props) {
+      return React.createElement('span', null, props.t('pulse.title'));
+    }
+
+    /**
      * Balance route served by the companion Host row
      * (`dsh-matrix-terminal-balance`); absent routes simply read as no balance.
      */
@@ -903,57 +1252,81 @@ body[data-ds-dark-theme] {
           'matrix-terminal: prompt line',
         );
 
-        // The work log: a Right-Sidebar page type whose body prints the rows the
-        // chat no longer shows. Optional, so a composition without the Right
-        // Sidebar keeps the skin and loses only the log.
+        // The right column's two pages: the work log, which prints the rows the
+        // chat no longer shows, and the activity fields, which say what is running
+        // right now. Both are optional, so a composition without the Right Sidebar
+        // keeps the skin and loses only these pages.
         ctx.effect(
           () =>
             ctx.inject(['slots', 'sidebarRightTabs', 'sidebarRight'], (scope) => {
-              scope.effect(
-                () =>
-                  scope.sidebarRightTabs.register({
-                    id: LOG_ID,
-                    kind: LOG_KIND,
-                    priority: 'extension',
-                    keepMounted: true,
-                    title: () => t('tab.title'),
-                    // The card that puts the log on the right sidebar's Start page,
-                    // beside Workspace files and New terminal. Picking it opens this
-                    // kind in place of the Start tab.
-                    guide: [
-                      {
-                        id: 'work-log',
-                        order: 40,
-                        title: () => t('tab.title'),
-                        description: () => t('guide.description'),
-                        icon: TerminalGlyph,
-                      },
-                    ],
-                  }),
-                'matrix-terminal: work log type',
-              );
+              // One shape for both pages: a type with a Start-page card, a body,
+              // and a chip title. The log also reveals itself once per Session.
+              const panes = [
+                {
+                  id: LOG_ID,
+                  kind: LOG_KIND,
+                  label: 'work log',
+                  titleKey: 'tab.title',
+                  card: { id: 'work-log', order: 40, descriptionKey: 'guide.description', icon: TerminalGlyph },
+                  body: WorkLogTab,
+                  chip: WorkLogTabTitle,
+                },
+                {
+                  id: PULSE_ID,
+                  kind: PULSE_KIND,
+                  label: 'activity fields',
+                  titleKey: 'pulse.title',
+                  card: { id: 'pulse', order: 41, descriptionKey: 'pulse.guide.description', icon: PulseGlyph },
+                  body: PulseTab,
+                  chip: PulseTabTitle,
+                },
+              ];
+              for (const pane of panes) {
+                scope.effect(
+                  () =>
+                    scope.sidebarRightTabs.register({
+                      id: pane.id,
+                      kind: pane.kind,
+                      priority: 'extension',
+                      keepMounted: true,
+                      title: () => t(pane.titleKey),
+                      // The Start page renders one card per contributed entry;
+                      // picking a card opens that kind in the Start tab's place.
+                      guide: [
+                        {
+                          id: pane.card.id,
+                          order: pane.card.order,
+                          title: () => t(pane.titleKey),
+                          description: () => t(pane.card.descriptionKey),
+                          icon: pane.card.icon,
+                        },
+                      ],
+                    }),
+                  'matrix-terminal: ' + pane.label + ' type',
+                );
 
-              scope.effect(
-                () =>
-                  scope.slots.inject('sidebar.right.pane.tab', () =>
-                    scope.slots.register(
-                      { name: 'sidebar.right.pane.tab', key: LOG_ID, locale: NS },
-                      WorkLogTab,
+                scope.effect(
+                  () =>
+                    scope.slots.inject('sidebar.right.pane.tab', () =>
+                      scope.slots.register(
+                        { name: 'sidebar.right.pane.tab', key: pane.id, locale: NS },
+                        pane.body,
+                      ),
                     ),
-                  ),
-                'matrix-terminal: work log body',
-              );
+                  'matrix-terminal: ' + pane.label + ' body',
+                );
 
-              scope.effect(
-                () =>
-                  scope.slots.inject('sidebar.right.pane.tab.title', () =>
-                    scope.slots.register(
-                      { name: 'sidebar.right.pane.tab.title', key: LOG_ID, locale: NS },
-                      WorkLogTabTitle,
+                scope.effect(
+                  () =>
+                    scope.slots.inject('sidebar.right.pane.tab.title', () =>
+                      scope.slots.register(
+                        { name: 'sidebar.right.pane.tab.title', key: pane.id, locale: NS },
+                        pane.chip,
+                      ),
                     ),
-                  ),
-                'matrix-terminal: work log title',
-              );
+                  'matrix-terminal: ' + pane.label + ' title',
+                );
+              }
 
               // Open the log once per Session; a tab the reader closes stays closed
               // until they move to another Session.
@@ -1016,7 +1389,7 @@ body[data-ds-dark-theme] {
                 };
               }, 'matrix-terminal: reveal work log');
             }),
-          'matrix-terminal: work log',
+          'matrix-terminal: right column pages',
         );
       },
     };

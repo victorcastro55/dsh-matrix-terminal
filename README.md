@@ -50,6 +50,18 @@ itself once per session; close it and it stays closed until you move to another 
 It also has a door on the sidebar's Start page, beside *Workspace files* and *New terminal*, so the
 log is reachable after you close it without waiting for another session.
 
+**The pulse.** A second right-sidebar page, also on the Start page: two fields of neural current, one
+for reasoning and one for tool work. Each field is a small constellation — nodes, spokes, a core —
+that stays dim while its signal is idle and starts firing when it goes live: current runs along the
+spokes, nodes flash in sequence, the core lights and throws off a ring. Green for thinking, amber for
+working, so the column says *what* is happening without reading the log.
+
+A tool call that settles in 40 ms would never be seen, so the working field keeps its light for 2.5
+seconds after the last finish. Each field's foot line names the newest thing behind it — `t3.s1` for a
+reasoning step, the tool and its subject for a call. The fields read the same live signals as the
+log, so they agree with it by construction. With `prefers-reduced-motion` the fields stay colour-coded
+but stop animating.
+
 ## Requirements
 
 - DeepSeek Harness `0.2.2-rc.1` or a compatible release, Web profile. The tab and guide APIs this
