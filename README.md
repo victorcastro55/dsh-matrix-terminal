@@ -62,6 +62,13 @@ reasoning step, the tool and its subject for a call. The fields read the same li
 log, so they agree with it by construction. With `prefers-reduced-motion` the fields stay colour-coded
 but stop animating.
 
+The nodes drift on their own clocks, idle and live alike: three paths on three durations, each node
+offset by a negative delay so no two neighbours move together. That motion is gated on visibility
+through an `IntersectionObserver`, so a hidden tab or a scrolled-away pane costs nothing — verified by
+reading `animation-name` back off the DOM (`none`) with the tab in the background. Measured in headless
+Chrome with the GPU disabled, the animated pane sat inside the app's own idle CPU noise at 60 fps; on
+a composited desktop it should cost less.
+
 ## Requirements
 
 - DeepSeek Harness `0.2.2-rc.1` or a compatible release, Web profile. The tab and guide APIs this

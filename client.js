@@ -421,9 +421,20 @@ body[data-ds-dark-theme] {
   stroke-width: 0.5;
   stroke-dasharray: 2 7;
 }
+/* Motion is gated on visibility: a field that is hidden or scrolled out of the
+   column keeps its shape and stops animating. */
 .mtx-pulse-svg .mtx-pulse-nodes circle {
   fill: var(--mtx-pulse-ink);
   fill-opacity: 0.28;
+}
+.mtx-pulse-field[data-animate] .mtx-pulse-svg .mtx-pulse-nodes circle {
+  /* Every node drifts on its own clock: orbiting is what makes the field read as
+     alive rather than as a diagram. Per-node values arrive as custom properties. */
+  animation-name: var(--mtx-drift, mtx-drift-a);
+  animation-duration: var(--mtx-drift-dur, 17s);
+  animation-delay: var(--mtx-drift-delay, 0s);
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
 }
 .mtx-pulse-core { fill: var(--mtx-pulse-ink); fill-opacity: 0.35; }
 .mtx-pulse-halo {
@@ -434,20 +445,23 @@ body[data-ds-dark-theme] {
   transform-box: fill-box;
   transform-origin: center;
 }
-.mtx-pulse-field[data-live] .mtx-pulse-svg line {
+.mtx-pulse-field[data-animate][data-live] .mtx-pulse-svg line {
   stroke-opacity: 0.45;
   animation-name: mtx-flow;
   animation-timing-function: linear;
   animation-iteration-count: infinite;
 }
-.mtx-pulse-field[data-live] .mtx-pulse-svg .mtx-pulse-nodes circle {
-  animation: mtx-node 1.6s ease-in-out infinite;
+/* Live adds the flash as a second animation, so the drift keeps running. */
+.mtx-pulse-field[data-animate][data-live] .mtx-pulse-svg .mtx-pulse-nodes circle {
+  animation-name: var(--mtx-drift, mtx-drift-a), mtx-node;
+  animation-duration: var(--mtx-drift-dur, 17s), 1.6s;
+  animation-delay: var(--mtx-drift-delay, 0s), var(--mtx-flash-delay, 0s);
 }
 .mtx-pulse-field[data-live] .mtx-pulse-core {
   fill-opacity: 0.9;
   filter: drop-shadow(0 0 5px var(--mtx-pulse-ink));
 }
-.mtx-pulse-field[data-live] .mtx-pulse-halo { animation: mtx-halo 2.2s ease-out infinite; }
+.mtx-pulse-field[data-animate][data-live] .mtx-pulse-halo { animation: mtx-halo 2.2s ease-out infinite; }
 .mtx-pulse-foot {
   flex: none;
   color: var(--dsw-alias-label-caption);
@@ -463,11 +477,26 @@ body[data-ds-dark-theme] {
   0%, 100% { fill-opacity: 0.28; }
   50% { fill-opacity: 1; }
 }
+/* Three drift paths, in user units of the 200x120 field box. */
+@keyframes mtx-drift-a {
+  0%, 100% { transform: translate(0, 0); }
+  50% { transform: translate(1.6px, -1.9px); }
+}
+@keyframes mtx-drift-b {
+  0%, 100% { transform: translate(0, 0); }
+  50% { transform: translate(-1.8px, 1.4px); }
+}
+@keyframes mtx-drift-c {
+  0%, 100% { transform: translate(0, 0); }
+  33% { transform: translate(1.3px, 1.6px); }
+  66% { transform: translate(-1.5px, -1.1px); }
+}
 @keyframes mtx-halo {
   0% { stroke-opacity: 0.42; transform: scale(0.55); }
   100% { stroke-opacity: 0; transform: scale(1.6); }
 }
 @media (prefers-reduced-motion: reduce) {
+  .mtx-pulse-field[data-animate] .mtx-pulse-svg .mtx-pulse-nodes circle,
   .mtx-pulse-field[data-live] .mtx-pulse-svg line,
   .mtx-pulse-field[data-live] .mtx-pulse-svg .mtx-pulse-nodes circle,
   .mtx-pulse-field[data-live] .mtx-pulse-halo { animation: none; }
@@ -911,11 +940,17 @@ body[data-ds-dark-theme] {
         for (let index = 0; index < ring.count; index += 1) {
           const step = (Math.PI * 2 * index) / ring.count;
           const drift = (nodes.length % 2 === 0 ? 1 : -1) * 0.15;
+          const seat = nodes.length;
           nodes.push({
             x: CX + Math.cos(step + drift) * ring.radius * STRETCH,
             y: CY + Math.sin(step + drift) * ring.radius * FLATTEN,
-            r: nodes.length % 3 === 0 ? 2.4 : 1.7,
-            delay: (nodes.length * 0.11) % 1.4,
+            r: seat % 3 === 0 ? 2.4 : 1.7,
+            delay: (seat * 0.11) % 1.4,
+            // Three drift paths on three clocks, desynchronised by a negative delay
+            // so no two neighbours ever move together.
+            drift: ['mtx-drift-a', 'mtx-drift-b', 'mtx-drift-c'][seat % 3],
+            driftDuration: 13 + (seat % 4) * 4 + 's',
+            driftDelay: '-' + ((seat * 1.7) % 11).toFixed(1) + 's',
           });
         }
       }
@@ -992,11 +1027,29 @@ body[data-ds-dark-theme] {
      */
     function ActivityField(props) {
       const tone = props.tone;
+      // Animate only while the field is on screen: the pane stays mounted when the
+      // reader switches tabs, and a hidden lattice has no business drawing frames.
+      const frame = React.useRef(null);
+      const [onScreen, setOnScreen] = React.useState(true);
+      React.useEffect(() => {
+        const element = frame.current;
+        if (element === null || typeof IntersectionObserver !== 'function') return undefined;
+        const observer = new IntersectionObserver(
+          (entries) => {
+            for (const entry of entries) setOnScreen(entry.isIntersecting);
+          },
+          { threshold: 0 },
+        );
+        observer.observe(element);
+        return () => observer.disconnect();
+      }, []);
       return React.createElement(
         'div',
         {
           className: 'mtx-pulse-field',
+          ref: frame,
           'data-tone': tone,
+          'data-animate': onScreen ? 'true' : undefined,
           'data-live': props.live ? 'true' : undefined,
           'aria-label': props.label + ': ' + (props.live ? props.liveLabel : props.idleLabel),
         },
@@ -1035,7 +1088,12 @@ body[data-ds-dark-theme] {
                 cx: node.x,
                 cy: node.y,
                 r: node.r,
-                style: { animationDelay: String(node.delay) + 's' },
+                style: {
+                  '--mtx-drift': node.drift,
+                  '--mtx-drift-dur': node.driftDuration,
+                  '--mtx-drift-delay': node.driftDelay,
+                  '--mtx-flash-delay': String(node.delay) + 's',
+                },
               }),
             ),
           ),
