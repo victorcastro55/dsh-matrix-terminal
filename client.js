@@ -2015,6 +2015,34 @@ stack(
 )`,
       },
       {
+        name: 'Hyperdrive Extended',
+        code: `setcpm(140/4)
+
+// A two-minute arc: 70 cycles at 140 BPM, then it loops back to the intro.
+const kick  = s("bd*4").gain(0.95)
+const clap  = s("~ cp ~ cp").gain(0.55).room(0.2)
+const hats  = s("hh*16").gain("1 0.3 0.6 0.3")
+const bass  = note("<c2 c2 c2 c2>").struct("~ x ~ x").s("sawtooth").lpf(420).gain(0.4)
+const sub   = note("<c1 c1 ab1 g1>").s("sine").gain(0.22)
+const stabs = note("<[c4,eb4,g4] [bb3,d4,f4] [ab3,c4,eb4] [g3,bb3,d4]>")
+  .struct("x ~ ~ x ~ x ~ ~").s("sawtooth").lpf(2400).attack(0.01).release(0.1).gain(0.16)
+const arp   = note("<c5 eb5 g5 bb5 ab5 g5 eb5 c5>".fast(2))
+  .s("square").lpf(3000).decay(0.08).sustain(0).delay(0.22).room(0.45).gain(0.12)
+const pad   = note("<[c4,eb4,g4] [ab3,c4,eb4] [f3,ab3,c4] [g3,bb3,d4]>")
+  .s("sawtooth").attack(1).release(2).lpf(900).room(0.8).gain(0.1)
+const roll  = s("sd*8").gain("0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9")
+
+arrange(
+  [10, stack(pad, arp)],
+  [4, stack(pad, arp, kick)],
+  [4, stack(pad, arp, kick, hats, roll)],
+  [16, stack(kick, clap, hats, bass, sub, stabs, arp)],
+  [8, stack(pad, stabs.slow(2), arp, sub)],
+  [20, stack(kick, clap, hats, bass, sub, stabs, arp, pad)],
+  [8, stack(pad, arp.slow(2))]
+)`,
+      },
+      {
         name: 'Euclidean',
         code: `setcpm(72/4)
 
