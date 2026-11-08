@@ -1,5 +1,7 @@
 # dsh-matrix-terminal
 
+[![Listed on dsh-plugin.org](https://dsh-plugin.org/badges/listed.svg)](https://dsh-plugin.org/plugins/victorcastro55/dsh-matrix-terminal)
+
 A phosphor-green terminal skin for the [DeepSeek Harness](https://github.com/deepseek-ai) Web UI.
 
 One monospace voice, square edges, scanlines over the glass, a blinking prompt line under the
