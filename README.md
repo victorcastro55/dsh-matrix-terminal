@@ -69,6 +69,21 @@ reading `animation-name` back off the DOM (`none`) with the tab in the backgroun
 Chrome with the GPU disabled, the animated pane sat inside the app's own idle CPU noise at 60 fps; on
 a composited desktop it should cost less.
 
+**The sound page.** A fourth Start card: drop an audio file on the pane, or choose one, and it plays
+with a cava-style spectrum — 20 to 56 log-spaced bands with peak caps that fall, drawn on a canvas
+and only while the pane is on screen. Audio keeps playing when you switch tabs; the drawing does not.
+Transport is play/pause, seek, elapsed and total, and volume.
+
+The file never leaves the browser. It plays from a blob URL and reaches the analyser through a Web
+Audio `AnalyserNode`, which is also why this page takes files rather than URLs: a cross-origin stream
+gives the analyser silence, so a URL player would show bars that have nothing to do with the music.
+
+**Why there is no Spotify here.** The Web API needs a registered app, an OAuth PKCE round trip, a
+Premium account and an active playback device — and none of that changes the analyser problem, since
+Spotify audio crosses an origin boundary the browser will not let you measure. A Spotify build would
+be a transport with a decorative visualizer, plus a client id and redirect URI to keep. It is doable
+as a separate page; it would not be this spectrum.
+
 ## Requirements
 
 - DeepSeek Harness `0.2.2-rc.1` or a compatible release, Web profile. The tab and guide APIs this

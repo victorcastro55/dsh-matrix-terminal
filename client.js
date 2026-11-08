@@ -497,6 +497,109 @@ body[data-ds-dark-theme] {
   0% { stroke-opacity: 0.42; transform: scale(0.55); }
   100% { stroke-opacity: 0; transform: scale(1.6); }
 }
+/* Sound: a transport and a cava-style spectrum, drawn on a canvas because bars
+   change every frame and DOM nodes would only add work. */
+.mtx-sound {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  height: 100%;
+  min-height: 0;
+  padding: 10px 12px 8px;
+  background: var(--dsw-alias-bg-base);
+  font-family: var(--dsw-font-family);
+}
+.mtx-sound-head {
+  flex: none;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 11px;
+  line-height: 16px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--dsw-alias-label-secondary);
+}
+.mtx-sound-name {
+  margin-left: auto;
+  max-width: 62%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--dsw-alias-label-caption);
+  letter-spacing: 0;
+  text-transform: none;
+}
+.mtx-sound-canvas {
+  flex: 1 1 auto;
+  width: 100%;
+  min-height: 140px;
+  display: block;
+}
+.mtx-sound-drop {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border: 1px dashed var(--dsw-alias-border-l3);
+  color: var(--dsw-alias-label-caption);
+  font-size: 11px;
+  line-height: 16px;
+}
+.mtx-sound-drop[data-over] {
+  border-color: var(--dsw-alias-brand-primary);
+  color: var(--dsw-alias-label-primary);
+}
+.mtx-sound-row {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  line-height: 16px;
+}
+.mtx-sound-btn {
+  flex: none;
+  padding: 2px 8px;
+  border: 1px solid var(--dsw-alias-border-l3);
+  border-radius: 0;
+  background: transparent;
+  color: var(--dsw-alias-label-primary);
+  font-family: inherit;
+  font-size: 11px;
+  line-height: 16px;
+  cursor: pointer;
+}
+.mtx-sound-btn:hover:not(:disabled) {
+  border-color: var(--dsw-alias-brand-primary);
+  color: var(--dsw-alias-brand-primary);
+}
+.mtx-sound-btn:disabled { opacity: 0.45; cursor: default; }
+.mtx-sound-time { flex: none; color: var(--dsw-alias-label-caption); font-variant-numeric: tabular-nums; }
+.mtx-sound-seek {
+  flex: 1 1 auto;
+  min-width: 60px;
+  height: 2px;
+  appearance: none;
+  background: var(--dsw-alias-border-l3);
+  cursor: pointer;
+}
+.mtx-sound-seek::-webkit-slider-thumb,
+.mtx-sound-vol::-webkit-slider-thumb {
+  appearance: none;
+  width: 7px;
+  height: 12px;
+  background: var(--dsw-alias-brand-primary);
+}
+.mtx-sound-vol {
+  flex: none;
+  width: 64px;
+  height: 2px;
+  appearance: none;
+  background: var(--dsw-alias-border-l3);
+  cursor: pointer;
+}
 @media (prefers-reduced-motion: reduce) {
   .mtx-pulse-field[data-animate] .mtx-pulse-svg .mtx-pulse-nodes circle,
   .mtx-pulse-field[data-live] .mtx-pulse-svg line,
@@ -530,6 +633,15 @@ body[data-ds-dark-theme] {
       'pulse.steps': 'steps',
       'pulse.events': 'events',
       'pulse.app': 'Activity: thinking and tool work for this session',
+      'sound.title': 'Sound',
+      'sound.guide.description': 'Play an audio file with a spectrum analyzer.',
+      'sound.drop': 'Drop an audio file here',
+      'sound.choose': 'Choose file',
+      'sound.empty': 'No track',
+      'sound.play': 'Play',
+      'sound.pause': 'Pause',
+      'sound.volume': 'Volume',
+      'sound.visual': 'Spectrum of the playing audio',
     };
     const zh = {
       'prompt.label': '终端提示符：harness@matrix',
@@ -551,6 +663,15 @@ body[data-ds-dark-theme] {
       'pulse.steps': '步',
       'pulse.events': '条',
       'pulse.app': '活动：本次会话的思考与工具活动',
+      'sound.title': '声音',
+      'sound.guide.description': '播放音频文件并显示频谱。',
+      'sound.drop': '把音频文件拖到这里',
+      'sound.choose': '选择文件',
+      'sound.empty': '没有曲目',
+      'sound.play': '播放',
+      'sound.pause': '暂停',
+      'sound.volume': '音量',
+      'sound.visual': '正在播放音频的频谱',
     };
 
     /** Right-Sidebar page type and body identity for the work log. */
@@ -560,6 +681,10 @@ body[data-ds-dark-theme] {
     /** Right-Sidebar page type and body identity for the activity fields. */
     const PULSE_ID = 'matrix-terminal-pulse';
     const PULSE_KIND = 'matrix-pulse';
+
+    /** Right-Sidebar page type and body identity for the sound pane. */
+    const SOUND_ID = 'matrix-terminal-sound';
+    const SOUND_KIND = 'matrix-sound';
 
     // #region work-log helpers
     /** Trim to one line and a fixed width for a log cell. */
@@ -1151,6 +1276,328 @@ body[data-ds-dark-theme] {
       return React.createElement('span', null, props.t('pulse.title'));
     }
 
+    /** mm:ss for a transport readout. */
+    function trackClock(seconds) {
+      if (!Number.isFinite(seconds) || seconds <= 0) return '0:00';
+      const whole = Math.floor(seconds);
+      const minutes = Math.floor(whole / 60);
+      const rest = whole % 60;
+      return String(minutes) + ':' + (rest < 10 ? '0' : '') + String(rest);
+    }
+
+    /**
+     * The sound page: one dropped or chosen audio file, a transport, and a
+     * cava-style spectrum over it. The bars live on a canvas because they change
+     * every frame; sixty DOM nodes per second would be the expensive way to draw
+     * the same picture. Analysis needs a same-document source, so a blob from a
+     * dropped file is the only input this page accepts.
+     */
+    function SoundTab(props) {
+      const t = props.t;
+      const shell = React.useRef(null);
+      const audio = React.useRef(null);
+      const canvas = React.useRef(null);
+      const fileInput = React.useRef(null);
+      const graph = React.useRef(null);
+      const screenRef = React.useRef(true);
+      const [name, setName] = React.useState('');
+      const [playing, setPlaying] = React.useState(false);
+      const [time, setTime] = React.useState(0);
+      const [duration, setDuration] = React.useState(0);
+      const [volume, setVolume] = React.useState(0.8);
+      const [over, setOver] = React.useState(false);
+
+      // Draw only while on screen; the audio keeps playing either way.
+      React.useEffect(() => {
+        const element = shell.current;
+        if (element === null || typeof IntersectionObserver !== 'function') return undefined;
+        const observer = new IntersectionObserver(
+          (entries) => {
+            for (const entry of entries) screenRef.current = entry.isIntersecting;
+          },
+          { threshold: 0 },
+        );
+        observer.observe(element);
+        return () => observer.disconnect();
+      }, []);
+
+      React.useEffect(() => {
+        const element = audio.current;
+        if (element === null) return undefined;
+        const onTime = () => setTime(element.currentTime);
+        const onMeta = () => setDuration(Number.isFinite(element.duration) ? element.duration : 0);
+        const onPlay = () => setPlaying(true);
+        const onPause = () => setPlaying(false);
+        element.volume = volume;
+        element.addEventListener('timeupdate', onTime);
+        element.addEventListener('loadedmetadata', onMeta);
+        element.addEventListener('durationchange', onMeta);
+        element.addEventListener('play', onPlay);
+        element.addEventListener('pause', onPause);
+        element.addEventListener('ended', onPause);
+        return () => {
+          element.removeEventListener('timeupdate', onTime);
+          element.removeEventListener('loadedmetadata', onMeta);
+          element.removeEventListener('durationchange', onMeta);
+          element.removeEventListener('play', onPlay);
+          element.removeEventListener('pause', onPause);
+          element.removeEventListener('ended', onPause);
+        };
+      }, []);
+
+      React.useEffect(() => {
+        const element = audio.current;
+        if (element !== null) element.volume = volume;
+      }, [volume]);
+
+      // The analyzer: one AudioContext per pane, created on the first play so the
+      // browser's autoplay rule is satisfied by the click itself.
+      const graphOf = () => {
+        const element = audio.current;
+        if (element === null) return null;
+        if (graph.current !== null) return graph.current;
+        const Ctor = window.AudioContext ?? window.webkitAudioContext;
+        if (Ctor === undefined) return null;
+        try {
+          const context = new Ctor();
+          const source = context.createMediaElementSource(element);
+          const analyser = context.createAnalyser();
+          analyser.fftSize = 1024;
+          analyser.smoothingTimeConstant = 0.82;
+          source.connect(analyser);
+          analyser.connect(context.destination);
+          graph.current = { context, analyser, bins: new Uint8Array(analyser.frequencyBinCount) };
+          return graph.current;
+        } catch {
+          return null;
+        }
+      };
+
+      React.useEffect(() => {
+        const tag = canvas.current;
+        if (tag === null) return undefined;
+        const style = getComputedStyle(tag);
+        const ink = style.getPropertyValue('--dsw-alias-brand-primary').trim() || '#00ff41';
+        const inkSoft = style.getPropertyValue('--dsw-alias-state-success-primary').trim() || '#38ff8f';
+        const peaks = [];
+        let frame = 0;
+        const draw = () => {
+          frame = window.requestAnimationFrame(draw);
+          if (!screenRef.current) return;
+          const width = tag.clientWidth;
+          const height = tag.clientHeight;
+          if (width === 0 || height === 0) return;
+          const ratio = Math.min(window.devicePixelRatio || 1, 2);
+          if (tag.width !== Math.round(width * ratio) || tag.height !== Math.round(height * ratio)) {
+            tag.width = Math.round(width * ratio);
+            tag.height = Math.round(height * ratio);
+          }
+          const painter = tag.getContext('2d');
+          if (painter === null) return;
+          painter.setTransform(ratio, 0, 0, ratio, 0, 0);
+          painter.clearRect(0, 0, width, height);
+          const count = Math.max(20, Math.min(56, Math.floor(width / 14)));
+          const gap = 2;
+          const barWidth = Math.max(1, (width - gap * (count - 1)) / count);
+          const span = height - 8;
+          const node = graph.current;
+          const levels = new Array(count).fill(0);
+          if (node !== null) {
+            node.analyser.getByteFrequencyData(node.bins);
+            const bins = node.bins.length;
+            for (let index = 0; index < count; index += 1) {
+              // Logarithmic bands: an analyzer that treats octaves evenly leaves the
+              // low half empty and the top half a wall.
+              const low = Math.floor(Math.pow(bins, index / count));
+              const high = Math.max(low + 1, Math.floor(Math.pow(bins, (index + 1) / count)));
+              let top = 0;
+              for (let bin = low; bin < high && bin < bins; bin += 1) top = Math.max(top, node.bins[bin]);
+              levels[index] = top / 255;
+            }
+          }
+          for (let index = 0; index < count; index += 1) {
+            const level = levels[index];
+            const x = index * (barWidth + gap);
+            const barHeight = Math.max(1, level * span);
+            const peak = Math.max(level, (peaks[index] ?? level) - 0.012);
+            peaks[index] = peak;
+            // A floor under every bar, so silence still reads as an analyzer.
+            painter.fillStyle = ink;
+            painter.globalAlpha = 0.12;
+            painter.fillRect(x, height - 2, barWidth, 2);
+            painter.fillStyle = index % 4 === 0 ? inkSoft : ink;
+            painter.globalAlpha = 0.32 + level * 0.62;
+            painter.fillRect(x, height - barHeight, barWidth, barHeight);
+            if (peak > 0.03) {
+              painter.globalAlpha = 0.85;
+              painter.fillRect(x, height - Math.max(2, peak * span) - 2, barWidth, 1);
+            }
+          }
+          painter.globalAlpha = 0.2;
+          painter.fillStyle = ink;
+          painter.fillRect(0, height - 1, width, 1);
+          painter.globalAlpha = 1;
+        };
+        draw();
+        return () => window.cancelAnimationFrame(frame);
+      }, []);
+
+      const load = (file) => {
+        if (file === null || file === undefined) return;
+        const element = audio.current;
+        if (element === null) return;
+        if (typeof element.src === 'string' && element.src.startsWith('blob:')) URL.revokeObjectURL(element.src);
+        element.src = URL.createObjectURL(file);
+        element.load();
+        setName(file.name.replace(/\.[^.]+$/, ''));
+        setTime(0);
+        setDuration(0);
+      };
+
+      const toggle = async () => {
+        const element = audio.current;
+        if (element === null || element.src === '') return;
+        const node = graphOf();
+        if (node !== null && node.context.state === 'suspended') {
+          try {
+            await node.context.resume();
+          } catch {
+            // A refused resume leaves the transport where it was.
+          }
+        }
+        try {
+          if (element.paused) await element.play();
+          else element.pause();
+        } catch {
+          // Playback refused by the browser; the button stays a play button.
+        }
+      };
+
+      return React.createElement(
+        'div',
+        {
+          className: 'mtx-sound',
+          ref: shell,
+          onDragOver: (event) => {
+            event.preventDefault();
+            setOver(true);
+          },
+          onDragLeave: () => setOver(false),
+          onDrop: (event) => {
+            event.preventDefault();
+            setOver(false);
+            const files = event.dataTransfer === null ? undefined : event.dataTransfer.files;
+            load(files === undefined ? undefined : files[0]);
+          },
+        },
+        React.createElement(
+          'div',
+          { className: 'mtx-sound-head' },
+          React.createElement('span', null, t('sound.title')),
+          React.createElement('span', { className: 'mtx-sound-name' }, name === '' ? t('sound.empty') : name),
+        ),
+        React.createElement('canvas', {
+          className: 'mtx-sound-canvas',
+          ref: canvas,
+          role: 'img',
+          'aria-label': t('sound.visual'),
+        }),
+        React.createElement(
+          'div',
+          { className: 'mtx-sound-drop', 'data-over': over ? 'true' : undefined },
+          React.createElement('span', null, t('sound.drop')),
+          React.createElement(
+            'button',
+            { className: 'mtx-sound-btn', type: 'button', onClick: () => fileInput.current?.click() },
+            t('sound.choose'),
+          ),
+          React.createElement('input', {
+            ref: fileInput,
+            type: 'file',
+            accept: 'audio/*',
+            style: { display: 'none' },
+            onChange: (event) => {
+              const files = event.target.files;
+              load(files === null ? undefined : files[0]);
+              event.target.value = '';
+            },
+          }),
+        ),
+        React.createElement(
+          'div',
+          { className: 'mtx-sound-row' },
+          React.createElement(
+            'button',
+            {
+              className: 'mtx-sound-btn',
+              type: 'button',
+              disabled: name === '',
+              onClick: toggle,
+              'aria-label': playing ? t('sound.pause') : t('sound.play'),
+            },
+            playing ? '\u2016\u2016' : '\u25b6',
+          ),
+          React.createElement('span', { className: 'mtx-sound-time' }, trackClock(time)),
+          React.createElement('input', {
+            className: 'mtx-sound-seek',
+            type: 'range',
+            min: 0,
+            max: 1,
+            step: 0.001,
+            value: duration > 0 ? Math.min(1, time / duration) : 0,
+            disabled: duration <= 0,
+            'aria-label': t('sound.title'),
+            onChange: (event) => {
+              const element = audio.current;
+              if (element !== null && duration > 0) element.currentTime = Number(event.target.value) * duration;
+            },
+          }),
+          React.createElement('span', { className: 'mtx-sound-time' }, trackClock(duration)),
+          React.createElement('input', {
+            className: 'mtx-sound-vol',
+            type: 'range',
+            min: 0,
+            max: 1,
+            step: 0.01,
+            value: volume,
+            'aria-label': t('sound.volume'),
+            onChange: (event) => setVolume(Number(event.target.value)),
+          }),
+        ),
+        React.createElement('audio', { ref: audio, preload: 'metadata' }),
+      );
+    }
+
+    /** The sound chip's own copy, re-read on every locale change. */
+    function SoundTabTitle(props) {
+      return React.createElement('span', null, props.t('sound.title'));
+    }
+
+    /**
+     * The sound page's Start-card glyph: four bars at uneven heights, on
+     * `currentColor`.
+     * @param props - rendered size and class.
+     * @returns the spectrum glyph.
+     */
+    function SoundGlyph(props) {
+      const size = props !== null && typeof props === 'object' && typeof props.size === 'number' ? props.size : 16;
+      return React.createElement(
+        'svg',
+        {
+          viewBox: '0 0 16 16',
+          width: size,
+          height: size,
+          fill: 'none',
+          className: props === null || typeof props !== 'object' ? undefined : props.className,
+          'aria-hidden': 'true',
+        },
+        React.createElement('rect', { x: 2, y: 6, width: 1.8, height: 7, fill: 'currentColor' }),
+        React.createElement('rect', { x: 5.8, y: 3, width: 1.8, height: 10, fill: 'currentColor' }),
+        React.createElement('rect', { x: 9.6, y: 5, width: 1.8, height: 8, fill: 'currentColor' }),
+        React.createElement('rect', { x: 13.4, y: 8, width: 1.4, height: 5, fill: 'currentColor' }),
+      );
+    }
+
     /**
      * Balance route served by the companion Host row
      * (`dsh-matrix-terminal-balance`); absent routes simply read as no balance.
@@ -1339,6 +1786,15 @@ body[data-ds-dark-theme] {
                   card: { id: 'pulse', order: 41, descriptionKey: 'pulse.guide.description', icon: PulseGlyph },
                   body: PulseTab,
                   chip: PulseTabTitle,
+                },
+                {
+                  id: SOUND_ID,
+                  kind: SOUND_KIND,
+                  label: 'sound',
+                  titleKey: 'sound.title',
+                  card: { id: 'sound', order: 42, descriptionKey: 'sound.guide.description', icon: SoundGlyph },
+                  body: SoundTab,
+                  chip: SoundTabTitle,
                 },
               ];
               for (const pane of panes) {
