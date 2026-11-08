@@ -94,6 +94,11 @@ connects to `context.destination` when it plays; this page intercepts connection
 node, scoped to that one context, and puts an analyser in front of it. The bars therefore measure what
 actually comes out of the engine, and the sound page's own graph is untouched by the interception.
 
+Before the engine starts, the pane prebakes the `dirt-samples` drum map: Strudel ships synths only, so
+without that every `s("bd")` would be silent while the filter sweeps and pads played on. The map is
+fetched once and each hit pulls its own wav on first use, so the first bar after a cold start may
+arrive a second late.
+
 Strudel is AGPL-3.0-or-later, which is a large part of why this plugin is AGPL too.
 
 **Why there is no Spotify here.** The Web API needs a registered app, an OAuth PKCE round trip, a

@@ -1970,6 +1970,33 @@ stack(
 )`,
       },
       {
+        name: 'Night City Run',
+        code: `setcpm(128/4)
+
+stack(
+  s("bd*4").gain("1 0.85 0.9 0.85"),
+  s("~ sd ~ sd").gain(0.8).room(0.3),
+  s("hh*16").gain("1 0.45 0.7 0.45").pan(sine.range(0.35, 0.65)),
+  note("<c2 c2 eb2 g1 c2 c2 bb1 g1>")
+    .s("sawtooth")
+    .lpf(sine.range(280, 1600).fast(4))
+    .shape(0.35)
+    .decay(0.18).sustain(0)
+    .gain(0.45),
+  note("<[c4,eb4,g4] [ab3,c4,eb4] [f3,ab3,c4] [g3,bb3,d4]>")
+    .s("sawtooth")
+    .attack(0.8).release(1.5)
+    .lpf(900).gain(0.12)
+    .room(0.7),
+  note("<c5 eb5 g5 f5 eb5 d5 c5 bb4>")
+    .struct("x ~ x x ~ x ~ x")
+    .s("square")
+    .decay(0.12).sustain(0)
+    .delay(0.28).room(0.4)
+    .gain(0.22)
+)`,
+      },
+      {
         name: 'Euclidean',
         code: `setcpm(72/4)
 
@@ -2058,7 +2085,18 @@ stack(
             };
           }
           const module = await import(STRUDEL_URL);
-          module.initStrudel();
+          // Strudel ships synths only; the drum banks are a sample map fetched
+          // once, then each hit pulls its own wav. A failure here must not take
+          // the engine with it: synths still play.
+          module.initStrudel({
+            prebake: async () => {
+              try {
+                await module.samples('github:tidalcycles/dirt-samples');
+              } catch {
+                // Offline: every s("bd") is silent, the rest of the pattern is not.
+              }
+            },
+          });
           this.module = module;
           return module;
         })();
