@@ -1,6 +1,6 @@
 {
   "name": "dsh-matrix-terminal",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "description": "Phosphor-green terminal skin for the DeepSeek Harness Web UI: monospace type, square edges, scanlines, a blinking prompt line, a right-side work log, and a chat reduced to a transcript.",
   "type": "module",
   "main": "index.js",

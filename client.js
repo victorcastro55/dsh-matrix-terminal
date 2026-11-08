@@ -530,6 +530,68 @@ body[data-ds-dark-theme] {
   letter-spacing: 0;
   text-transform: none;
 }
+.mtx-sound-refresh {
+  flex: none;
+  padding: 0 6px;
+  border: 1px solid var(--dsw-alias-border-l3);
+  border-radius: 0;
+  background: transparent;
+  color: var(--dsw-alias-label-secondary);
+  font-family: inherit;
+  font-size: 11px;
+  line-height: 16px;
+  cursor: pointer;
+}
+.mtx-sound-refresh:hover {
+  border-color: var(--dsw-alias-brand-primary);
+  color: var(--dsw-alias-brand-primary);
+}
+.mtx-sound-list {
+  flex: 0 1 34%;
+  min-height: 0;
+  overflow: auto;
+  border-top: 1px solid var(--dsw-alias-border-l1);
+}
+.mtx-sound-track {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  width: 100%;
+  padding: 2px 4px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--dsw-alias-label-secondary);
+  font-family: inherit;
+  font-size: 11px;
+  line-height: 17px;
+  text-align: left;
+  cursor: pointer;
+}
+.mtx-sound-track:hover { background: var(--dsw-alias-interactive-bg-hover); color: var(--dsw-alias-label-primary); }
+.mtx-sound-track[data-active] {
+  background: var(--dsw-alias-interactive-bg-active);
+  color: var(--dsw-alias-brand-primary);
+}
+.mtx-sound-track-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.mtx-sound-track-size {
+  flex: none;
+  margin-left: auto;
+  color: var(--dsw-alias-label-dimmed);
+  font-variant-numeric: tabular-nums;
+}
+.mtx-sound-note {
+  flex: none;
+  color: var(--dsw-alias-label-caption);
+  font-size: 11px;
+  line-height: 16px;
+}
+.mtx-sound-drop[data-hidden] { display: none; }
 .mtx-sound-canvas {
   flex: 1 1 auto;
   width: 100%;
@@ -642,6 +704,9 @@ body[data-ds-dark-theme] {
       'sound.pause': 'Pause',
       'sound.volume': 'Volume',
       'sound.visual': 'Spectrum of the playing audio',
+      'sound.library.missing': 'No folder at',
+      'sound.library.empty': 'No audio files in this folder.',
+      'sound.refresh': 'Rescan folder',
     };
     const zh = {
       'prompt.label': '终端提示符：harness@matrix',
@@ -672,6 +737,9 @@ body[data-ds-dark-theme] {
       'sound.pause': '暂停',
       'sound.volume': '音量',
       'sound.visual': '正在播放音频的频谱',
+      'sound.library.missing': '未找到文件夹：',
+      'sound.library.empty': '该文件夹中没有音频文件。',
+      'sound.refresh': '重新扫描文件夹',
     };
 
     /** Right-Sidebar page type and body identity for the work log. */
@@ -1276,6 +1344,14 @@ body[data-ds-dark-theme] {
       return React.createElement('span', null, props.t('pulse.title'));
     }
 
+    /** One-decimal file size for a listing row. */
+    function formatBytes(bytes) {
+      if (!Number.isFinite(bytes) || bytes <= 0) return '';
+      const megabytes = bytes / (1024 * 1024);
+      if (megabytes >= 1) return megabytes.toFixed(1) + 'M';
+      return Math.max(1, Math.round(bytes / 1024)) + 'K';
+    }
+
     /** mm:ss for a transport readout. */
     function trackClock(seconds) {
       if (!Number.isFinite(seconds) || seconds <= 0) return '0:00';
@@ -1306,6 +1382,12 @@ body[data-ds-dark-theme] {
       const [duration, setDuration] = React.useState(0);
       const [volume, setVolume] = React.useState(0.8);
       const [over, setOver] = React.useState(false);
+      const [tracks, setTracks] = React.useState([]);
+      const [active, setActive] = React.useState(-1);
+      const [library, setLibrary] = React.useState('loading');
+      const [libraryRoot, setLibraryRoot] = React.useState('');
+      // Handlers registered once need the current list, index and player.
+      const live = React.useRef({ tracks: [], active: -1, play: () => {} });
 
       // Draw only while on screen; the audio keeps playing either way.
       React.useEffect(() => {
@@ -1328,20 +1410,25 @@ body[data-ds-dark-theme] {
         const onMeta = () => setDuration(Number.isFinite(element.duration) ? element.duration : 0);
         const onPlay = () => setPlaying(true);
         const onPause = () => setPlaying(false);
+        const onEnded = () => {
+          setPlaying(false);
+          const current = live.current;
+          if (current.tracks.length > 1 && current.active >= 0) current.play((current.active + 1) % current.tracks.length);
+        };
         element.volume = volume;
         element.addEventListener('timeupdate', onTime);
         element.addEventListener('loadedmetadata', onMeta);
         element.addEventListener('durationchange', onMeta);
         element.addEventListener('play', onPlay);
         element.addEventListener('pause', onPause);
-        element.addEventListener('ended', onPause);
+        element.addEventListener('ended', onEnded);
         return () => {
           element.removeEventListener('timeupdate', onTime);
           element.removeEventListener('loadedmetadata', onMeta);
           element.removeEventListener('durationchange', onMeta);
           element.removeEventListener('play', onPlay);
           element.removeEventListener('pause', onPause);
-          element.removeEventListener('ended', onPause);
+          element.removeEventListener('ended', onEnded);
         };
       }, []);
 
@@ -1349,6 +1436,62 @@ body[data-ds-dark-theme] {
         const element = audio.current;
         if (element !== null) element.volume = volume;
       }, [volume]);
+
+      const readLibrary = React.useCallback(async (force) => {
+        try {
+          const response = await fetch(LIBRARY_ROUTE + (force ? '?refresh=1' : ''), {
+            headers: { accept: 'application/json' },
+          });
+          if (!response.ok) {
+            setLibrary('absent');
+            return;
+          }
+          const body = await response.json();
+          if (body === null || typeof body !== 'object') {
+            setLibrary('absent');
+            return;
+          }
+          setLibraryRoot(typeof body.root === 'string' ? body.root : '');
+          if (body.ok !== true) {
+            setLibrary('missing');
+            setTracks([]);
+            return;
+          }
+          const listing = Array.isArray(body.tracks) ? body.tracks.filter((item) => item !== null && typeof item === 'object' && typeof item.name === 'string') : [];
+          setTracks(listing);
+          setLibrary(listing.length === 0 ? 'empty' : 'ok');
+        } catch {
+          // No companion installed: the pane stays a drop target.
+          setLibrary('absent');
+        }
+      }, []);
+
+      React.useEffect(() => {
+        readLibrary(false);
+      }, [readLibrary]);
+
+      /**
+       * Play one library track through the same element the spectrum reads.
+       * @param index - position in the library listing.
+       */
+      const playTrack = (index) => {
+        const element = audio.current;
+        const track = tracks[index];
+        if (element === null || track === undefined) return;
+        const node = graphOf();
+        if (node !== null && node.context.state === 'suspended') {
+          node.context.resume().catch(() => {});
+        }
+        element.src = LIBRARY_TRACK_ROUTE + '?name=' + encodeURIComponent(track.name);
+        element.load();
+        setName(track.name.replace(/\.[^.]+$/, ''));
+        setTime(0);
+        setDuration(0);
+        setActive(index);
+        element.play().catch(() => {});
+      };
+
+      live.current = { tracks, active, play: playTrack };
 
       // The analyzer: one AudioContext per pane, created on the first play so the
       // browser's autoplay rule is satisfied by the click itself.
@@ -1452,6 +1595,7 @@ body[data-ds-dark-theme] {
         setName(file.name.replace(/\.[^.]+$/, ''));
         setTime(0);
         setDuration(0);
+        setActive(-1);
       };
 
       const toggle = async () => {
@@ -1494,6 +1638,19 @@ body[data-ds-dark-theme] {
           'div',
           { className: 'mtx-sound-head' },
           React.createElement('span', null, t('sound.title')),
+          library === 'absent' || library === 'loading'
+            ? null
+            : React.createElement(
+                'button',
+                {
+                  className: 'mtx-sound-refresh',
+                  type: 'button',
+                  title: t('sound.refresh'),
+                  'aria-label': t('sound.refresh'),
+                  onClick: () => readLibrary(true),
+                },
+                '\u21bb',
+              ),
           React.createElement('span', { className: 'mtx-sound-name' }, name === '' ? t('sound.empty') : name),
         ),
         React.createElement('canvas', {
@@ -1502,9 +1659,38 @@ body[data-ds-dark-theme] {
           role: 'img',
           'aria-label': t('sound.visual'),
         }),
+        tracks.length === 0
+          ? null
+          : React.createElement(
+              'div',
+              { className: 'mtx-sound-list', role: 'list' },
+              tracks.map((track, index) =>
+                React.createElement(
+                  'button',
+                  {
+                    key: track.name,
+                    type: 'button',
+                    role: 'listitem',
+                    className: 'mtx-sound-track',
+                    'data-active': index === active ? 'true' : undefined,
+                    onClick: () => playTrack(index),
+                    title: track.name,
+                  },
+                  React.createElement('span', { className: 'mtx-sound-track-name' }, track.name.replace(/\.[^.]+$/, '')),
+                  React.createElement('span', { className: 'mtx-sound-track-size' }, formatBytes(track.size)),
+                ),
+              ),
+            ),
+        library === 'missing' || library === 'empty'
+          ? React.createElement(
+              'div',
+              { className: 'mtx-sound-note' },
+              library === 'missing' ? t('sound.library.missing') + ' ' + libraryRoot : t('sound.library.empty'),
+            )
+          : null,
         React.createElement(
           'div',
-          { className: 'mtx-sound-drop', 'data-over': over ? 'true' : undefined },
+          { className: 'mtx-sound-drop', 'data-over': over ? 'true' : undefined, 'data-hidden': tracks.length > 0 ? 'true' : undefined },
           React.createElement('span', null, t('sound.drop')),
           React.createElement(
             'button',
@@ -1603,6 +1789,10 @@ body[data-ds-dark-theme] {
      * (`dsh-matrix-terminal-balance`); absent routes simply read as no balance.
      */
     const BALANCE_ROUTE = '/api/matrix-terminal.balance';
+
+    /** Library listing and track routes served by the optional library companion. */
+    const LIBRARY_ROUTE = '/api/matrix-terminal.library';
+    const LIBRARY_TRACK_ROUTE = '/api/matrix-terminal.library/track';
 
     /**
      * Format one wallet the way the Platform's own web UI does: two decimals,

@@ -74,6 +74,12 @@ with a cava-style spectrum — 20 to 56 log-spaced bands with peak caps that fal
 and only while the pane is on screen. Audio keeps playing when you switch tabs; the drawing does not.
 Transport is play/pause, seek, elapsed and total, and volume.
 
+With the optional [library companion](https://github.com/victorcastro55/dsh-matrix-terminal-library)
+installed, the pane lists one folder instead — name and size per row, click to play, the next track
+starts when one ends, and a rescan button picks up files you added. The folder is `~/Music` unless the
+library's `root` config says otherwise. Dropping a file still works with a library loaded; it just
+plays instead of the selected row.
+
 The file never leaves the browser. It plays from a blob URL and reaches the analyser through a Web
 Audio `AnalyserNode`, which is also why this page takes files rather than URLs: a cross-origin stream
 gives the analyser silence, so a URL player would show bars that have nothing to do with the music.
@@ -101,10 +107,11 @@ dsh plugin --profile web add github:victorcastro55/dsh-matrix-terminal
 
 Restart `dsh web` (or let the profile reload) and the skin is on.
 
-To also get the balance on the prompt line, install the companion:
+Optional companions, each independent:
 
 ```sh
-dsh plugin --profile web add github:victorcastro55/dsh-matrix-terminal-balance
+dsh plugin --profile web add github:victorcastro55/dsh-matrix-terminal-balance   # balance on the prompt line
+dsh plugin --profile web add github:victorcastro55/dsh-matrix-terminal-library   # a folder of audio for the sound page
 ```
 
 ### From a clone
