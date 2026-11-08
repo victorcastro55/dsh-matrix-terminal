@@ -2043,6 +2043,37 @@ arrange(
 )`,
       },
       {
+        name: 'French Touch',
+        code: `setcpm(118/4)
+
+// 56 cycles at 118 BPM = 1:54, and the last section is the first one, so the
+// loop point is invisible: it ends filtered, exactly as it began.
+const kick  = s("bd*4").gain(0.95)
+const snare = s("~ sd ~ sd").gain(0.5).room(0.25)
+const hats  = s("hh*8").gain("0.5 0.3 0.45 0.3").pan(sine.range(0.4, 0.6))
+const ohat  = s("~ ~ oh ~").gain(0.26)
+const bass  = note("<c2 c2 eb2 g1>").struct("x ~ x x ~ x ~ x")
+  .s("sawtooth").lpf(sine.range(300, 900).slow(8))
+  .decay(0.16).sustain(0).gain(0.42)
+const stab  = note("<[c4,eb4,g4] [bb3,d4,f4] [ab3,c4,eb4] [g3,bb3,d4]>")
+  .struct("~ x ~ x ~ ~ x ~").s("sawtooth")
+  .lpf(sine.range(1200, 3200).slow(16))
+  .attack(0.005).release(0.12).gain(0.14).room(0.3)
+const pad   = note("<[c4,eb4,g4] [ab3,c4,eb4]>").s("sawtooth")
+  .attack(0.4).release(0.8).lpf(1400)
+  .gain(sine.range(0.04, 0.1).fast(4)).room(0.6)
+const vox   = note("<c5 eb5 g5 eb5 c5 bb4 g4 bb4>").struct("x ~ ~ x ~ x ~ ~")
+  .s("square").lpf(1800).decay(0.2).sustain(0).delay(0.3).room(0.4).gain(0.1)
+
+arrange(
+  [8, stack(kick, hats, bass.lpf(600))],
+  [16, stack(kick, snare, hats, ohat, bass, stab, vox)],
+  [8, stack(kick, snare, ohat, stab.lpf(4000), pad, vox)],
+  [16, stack(kick, snare, hats, ohat, bass, stab, vox, pad)],
+  [8, stack(kick, hats, bass.lpf(600))]
+)`,
+      },
+      {
         name: 'Euclidean',
         code: `setcpm(72/4)
 

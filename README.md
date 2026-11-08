@@ -84,7 +84,7 @@ The file never leaves the browser. It plays from a blob URL and reaches the anal
 Audio `AnalyserNode`, which is also why this page takes files rather than URLs: a cross-origin stream
 gives the analyser silence, so a URL player would show bars that have nothing to do with the music.
 
-**The pattern page.** A fifth Start card: a Strudel editor, six built-in pieces, and the same
+**The pattern page.** A fifth Start card: a Strudel editor, seven built-in pieces, and the same
 spectrum as the sound page — except here the bars are real. Run plays the editor's code, Stop hushes
 it, and Save keeps a piece under a name in `localStorage` beside the built-ins that live in the repo.
 
