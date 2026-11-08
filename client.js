@@ -2088,7 +2088,11 @@ stack(
           // Strudel ships synths only; the drum banks are a sample map fetched
           // once, then each hit pulls its own wav. A failure here must not take
           // the engine with it: synths still play.
-          module.initStrudel({
+          // initStrudel returns the promise of its own prebake. Awaiting it is the
+          // difference between drums on the first bar and drums a few seconds late:
+          // evaluating against a half-initialised engine plays the synths and drops
+          // every sample hit until the map arrives.
+          await module.initStrudel({
             prebake: async () => {
               try {
                 await module.samples('github:tidalcycles/dirt-samples');
