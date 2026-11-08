@@ -383,7 +383,8 @@ body[data-ds-dark-theme] {
     const en = {
       'prompt.label': 'Terminal prompt: harness@matrix',
       'balance.label': 'Balance',
-      'tab.title': 'Work',
+      'tab.title': 'Work log',
+      'guide.description': 'Reasoning and tool activity for this session.',
       'think.title': 'Thinking',
       'think.empty': 'No reasoning yet in this session.',
       'think.label': 'Reasoning: model thinking for this session',
@@ -394,7 +395,8 @@ body[data-ds-dark-theme] {
     const zh = {
       'prompt.label': '终端提示符：harness@matrix',
       'balance.label': '余额',
-      'tab.title': '工作',
+      'tab.title': '工作日志',
+      'guide.description': '本次会话的推理与工具活动。',
       'think.title': '思考',
       'think.empty': '本次会话尚无推理内容。',
       'think.label': '推理：本次会话的模型思考',
@@ -713,6 +715,34 @@ body[data-ds-dark-theme] {
     }
 
     /**
+     * The Start page's card glyph: a prompt caret and a block cursor, drawn on
+     * `currentColor` so the card picks its own ink.
+     * @param props - rendered size and class.
+     * @returns the terminal glyph.
+     */
+    function TerminalGlyph(props) {
+      const size = props !== null && typeof props === 'object' && typeof props.size === 'number' ? props.size : 16;
+      return React.createElement(
+        'svg',
+        {
+          viewBox: '0 0 16 16',
+          width: size,
+          height: size,
+          fill: 'none',
+          className: props === null || typeof props !== 'object' ? undefined : props.className,
+          'aria-hidden': 'true',
+        },
+        React.createElement('path', {
+          d: 'M2.5 4.5L6 8l-3.5 3.5',
+          stroke: 'currentColor',
+          strokeWidth: 1.6,
+          strokeLinecap: 'square',
+        }),
+        React.createElement('rect', { x: 8, y: 10, width: 5.5, height: 1.8, fill: 'currentColor' }),
+      );
+    }
+
+    /**
      * Balance route served by the companion Host row
      * (`dsh-matrix-terminal-balance`); absent routes simply read as no balance.
      */
@@ -887,6 +917,18 @@ body[data-ds-dark-theme] {
                     priority: 'extension',
                     keepMounted: true,
                     title: () => t('tab.title'),
+                    // The card that puts the log on the right sidebar's Start page,
+                    // beside Workspace files and New terminal. Picking it opens this
+                    // kind in place of the Start tab.
+                    guide: [
+                      {
+                        id: 'work-log',
+                        order: 40,
+                        title: () => t('tab.title'),
+                        description: () => t('guide.description'),
+                        icon: TerminalGlyph,
+                      },
+                    ],
                   }),
                 'matrix-terminal: work log type',
               );

@@ -47,9 +47,13 @@ thought), the work log below (one row per tool call or process event, with clock
 duration). Each pane follows its own tail and releases as soon as you scroll away. The log opens
 itself once per session; close it and it stays closed until you move to another session.
 
+It also has a door on the sidebar's Start page, beside *Workspace files* and *New terminal*, so the
+log is reachable after you close it without waiting for another session.
+
 ## Requirements
 
-- DeepSeek Harness `0.2.1-rc.5` or a compatible release, Web profile.
+- DeepSeek Harness `0.2.2-rc.1` or a compatible release, Web profile. The tab and guide APIs this
+  uses are also present in `0.2.1-rc.5`.
 - The work log needs the right sidebar. Without it the skin still applies; only the log is lost.
 - Dark only, deliberately. A terminal has one look.
 
